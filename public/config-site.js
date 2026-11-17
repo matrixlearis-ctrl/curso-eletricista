@@ -6,6 +6,6 @@ window.CONFIG_SITE = {
   dominio: 'learis.com.br',
   valorAcesso: 19.9,
   descricaoPagamento: 'Curso de Eletricista - Acesso completo',
-  suporteWhatsapp: '', // ex.: "5511999999999"
+  suporteWhatsapp: 'https://chat.whatsapp.com/IEwdw1vFAUz7bWxBZnRwYf?s=sh&p=a&iam=2', // numero (5511999999999) ou link completo de grupo/canal
   emailSuporte: 'learisgrup@gmail.com'
 };

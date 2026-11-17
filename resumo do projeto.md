@@ -248,8 +248,11 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 4. Se quiser, adicionar o WhatsApp de suporte em `public/config-site.js` (`suporteWhatsapp`, ex.: `5511999999999`)
 5. Opcional: pagina de vendas publica (o painel do aluno com progresso e marcacao ja esta pronto)
 
-Suporte por e-mail configurado: `learisgrup@gmail.com` (`emailSuporte` em `config-site.js`,
-usado pelo painel em `/aulas`; o painel tambem carrega `config-site.js` e tem o mesmo valor como reserva).
+Suporte configurado no painel `/aulas` via `config-site.js` (e com os mesmos valores como reserva
+no proprio painel):
+- **WhatsApp (grupo):** `https://chat.whatsapp.com/IEwdw1vFAUz7bWxBZnRwYf?s=sh&p=a&iam=2`
+  (`suporteWhatsapp`; o painel aceita numero `wa.me` ou link completo)
+- **E-mail:** `learisgrup@gmail.com` (`emailSuporte`)
 
 ## 13. Checklist de validacao em producao
 
