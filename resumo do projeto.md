@@ -205,6 +205,12 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Pagina de aulas em HTTP** (`localhost`): 30 cards, sem erros no console
   → o erro 153 do YouTube era causado por abrir via `file://`
 - **Mobile** (viewport 390x844): sem overflow horizontal em aulas, login e pagamento
+- **Painel das aulas reformulado** em 18/11/2026 no estilo do site de referencia: navy profundo +
+  faixa de seguranca amarela, fontes Chakra Petch/Inter, hero, 3 indicadores, 5 modulos em cards,
+  lista de aulas, player com Anterior/Assistida/Proxima, menu lateral no celular e progresso em
+  `localStorage` (`learis_progresso_v1`). Visual adaptado com a identidade do Curso de Eletricista,
+  sem copiar textos/imagens do modelo. Validado no navegador: 30 aulas, 5 modulos, navegacao,
+  player, marcacao, progresso, suporte (links em configuracao) e viewport 390x844 sem overflow.
 - **Producao (Vercel + `learis.com.br`)**: `/api/health` e `/api/config` OK; cadastro → login →
   `/aulas` entregou as 30 aulas, Aula 28 e Aula 30 corretas; sem cookie `/aulas` redireciona (302);
   DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
@@ -236,7 +242,8 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 1. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
 2. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
 3. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
-4. Opcional: pagina de vendas publica, painel do aluno com progresso, marcacao de aulas assistidas
+4. Preencher os links de suporte (WhatsApp/e-mail) em `public/config-site.js` ou diretamente no painel
+5. Opcional: pagina de vendas publica (o painel do aluno com progresso e marcacao ja esta pronto)
 
 ## 13. Checklist de validacao em producao
 
@@ -248,4 +255,4 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - [ ] Webhook aprova e libera o usuario automaticamente
 - [x] `/aulas` abre com as 30 aulas so para aluno liberado (validado em producao)
 - [ ] E-mail "acesso liberado" chega ao aluno
-- [ ] Layout conferido no celular (a maioria dos alunos assiste pelo telefone)
+- [x] Layout conferido no celular (viewport 390x844, sem overflow; menu lateral e cards testados)
