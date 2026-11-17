@@ -7,5 +7,5 @@ window.CONFIG_SITE = {
   valorAcesso: 19.9,
   descricaoPagamento: 'Curso de Eletricista - Acesso completo',
   suporteWhatsapp: '', // ex.: "5511999999999"
-  emailSuporte: ''
+  emailSuporte: 'learisgrup@gmail.com'
 };
