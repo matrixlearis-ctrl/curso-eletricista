@@ -112,6 +112,8 @@ Passo a passo:
 5. Em **Settings → Domains**, adicione `learis.com.br` e `www.learis.com.br`
    e crie os registros DNS que a Vercel mostrar (A / CNAME)
 6. No Mercado Pago, configure o webhook `https://learis.com.br/api/mercadopago/webhook`
+   (o backend ja envia essa URL como `notification_url` em cada cobranca; o cadastro no painel
+   da aplicacao MP e opcional)
 
 ### Observacoes da Vercel
 

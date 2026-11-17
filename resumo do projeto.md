@@ -109,11 +109,12 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | Repo conectado | `matrixlearis-ctrl/curso-eletricista`, branch `main`, deploy automatico |
 | DNS HostGator | A `@` → `76.76.21.21`; CNAME `www` → `cname.vercel-dns.com` |
 | HTTPS | certificado emitido e valido nos dois dominios |
-| Variaveis | 8 preenchidas (Supabase, valor 19.9, NODE_ENV=production, etc.) |
-| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK |
+| Variaveis | 9 preenchidas (Supabase, valor 19.9, NODE_ENV=production, MP_ACCESS_TOKEN, etc.) |
+| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix real R$ 19,90 gerado |
 
-Variaveis ainda nao preenchidas na Vercel (adicionar e fazer redeploy quando tiver):
-`MP_ACCESS_TOKEN` e `RESEND_API_KEY`.
+Variavel ainda nao preenchida na Vercel: `RESEND_API_KEY`.
+`MP_ACCESS_TOKEN` configurado em 17/11/2026 com o token de producao da conta Mercado Pago
+usada no LotoBot (validado via `GET /users/me`); `/api/health` retorna `mercadoPago: true`.
 
 Arquivos criados para o deploy:
 
@@ -132,6 +133,8 @@ Passos para publicar:
 4. **Deploy** → testar na URL `*.vercel.app`
 5. **Settings → Domains** → `learis.com.br` + `www.learis.com.br` e criar os DNS indicados
 6. Mercado Pago → webhook `https://learis.com.br/api/mercadopago/webhook`
+   (o backend envia essa URL em `notification_url` a cada cobranca; opcionalmente cadastre
+   tambem no painel da aplicacao MP em *Webhooks*)
 
 Observacoes:
 
@@ -201,6 +204,9 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Producao (Vercel + `learis.com.br`)**: `/api/health` e `/api/config` OK; cadastro → login →
   `/aulas` entregou as 30 aulas, Aula 28 e Aula 30 corretas; sem cookie `/aulas` redireciona (302);
   DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
+- **Pix real em producao**: `/api/health` com `mercadoPago: true`; conta de teste gerou cobranca
+  de R$ 19,90 no MP (`status: pending`, `mpId`, QR Code e `ticket_url`), conta removida depois;
+  endpoint do webhook respondeu `200 {"received":true}`
 
 ## 11. Seguranca
 
@@ -215,13 +221,14 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   - `SUPABASE_SERVICE_ROLE_KEY` (colar no `.env`/Vercel e apagar a antiga no painel)
   - Token do GitHub (`github_pat_...`) — revogar em Settings > Developer settings
   - Token da Vercel (`vcp_...`) — revogar em Vercel > Settings > Tokens
-  - `MP_ACCESS_TOKEN` — gerar um novo no painel do Mercado Pago
+  - `MP_ACCESS_TOKEN` — gerar um novo no painel do Mercado Pago e atualizar `.env`/Vercel
+    (o valor atual tambem apareceu em conversa e na doc do LotoBot)
 
 ## 12. Pendencias
 
-1. **`MP_ACCESS_TOKEN` real** — sem ele o Pix nao funciona (nao ha simulacao em producao)
-2. **`RESEND_API_KEY`** + dominio `learis.com.br` verificado no Resend
-3. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel)
+1. **`RESEND_API_KEY`** + dominio `learis.com.br` verificado no Resend
+2. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
+3. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
 4. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
 5. Opcional: pagina de vendas publica, painel do aluno com progresso, marcacao de aulas assistidas
 
@@ -231,7 +238,7 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - [ ] `/api/auth/cadastro` cria usuario e o e-mail chega (usuario criado; falta o Resend)
 - [ ] Link de confirmacao abre `/confirmar-email.html` e confirma
 - [ ] Login leva para `/pagamento.html` (usuario sem pagamento)
-- [ ] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90
+- [x] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90 (teste real em producao)
 - [ ] Webhook aprova e libera o usuario automaticamente
 - [x] `/aulas` abre com as 30 aulas so para aluno liberado (validado em producao)
 - [ ] E-mail "acesso liberado" chega ao aluno

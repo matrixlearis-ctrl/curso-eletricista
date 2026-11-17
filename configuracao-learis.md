@@ -73,7 +73,7 @@ Observacoes:
 
 ## 6. Seguranca
 
-- O `MP_ACCESS_TOKEN` foi compartilhado em conversa: **rotacione/revogue e gere um novo** no painel do Mercado Pago antes de ir para producao.
+- `MP_ACCESS_TOKEN` configurado em 17/11/2026 (token de producao `APP_USR-...`, o mesmo da conta do LotoBot), validado com `GET /users/me` e com geracao real de Pix. Como o valor apareceu em conversa, **gere outro e troque em `.env` + Vercel** quando possivel.
 - Senhas sao armazenadas com `scrypt` + salt (nunca em texto puro).
 - Sessao em cookie `HttpOnly` (`learis_sessao`), validade de 30 dias, `Secure` automatico quando `PUBLIC_BASE_URL` e HTTPS.
 - `private/aulas.html` fica fora da pasta publica: o acesso so acontece pela rota `/aulas`, que exige login + liberacao.
