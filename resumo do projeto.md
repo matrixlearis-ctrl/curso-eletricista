@@ -109,12 +109,15 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | Repo conectado | `matrixlearis-ctrl/curso-eletricista`, branch `main`, deploy automatico |
 | DNS HostGator | A `@` → `76.76.21.21`; CNAME `www` → `cname.vercel-dns.com` |
 | HTTPS | certificado emitido e valido nos dois dominios |
-| Variaveis | 9 preenchidas (Supabase, valor 19.9, NODE_ENV=production, MP_ACCESS_TOKEN, etc.) |
-| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix real R$ 19,90 gerado |
+| Variaveis | 10 preenchidas (Supabase, valor 19.9, NODE_ENV=production, MP, Resend, etc.) |
+| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix real R$ 19,90; e-mail entregue |
 
-Variavel ainda nao preenchida na Vercel: `RESEND_API_KEY`.
-`MP_ACCESS_TOKEN` configurado em 17/11/2026 com o token de producao da conta Mercado Pago
-usada no LotoBot (validado via `GET /users/me`); `/api/health` retorna `mercadoPago: true`.
+Todas as variaveis estao preenchidas na Vercel. Em 17/11/2026 foram configurados:
+`MP_ACCESS_TOKEN` (token de producao da conta MP usada no LotoBot, validado via `GET /users/me`)
+e `RESEND_API_KEY` (chave do Resend do LotoBot, validada com envio real).
+`/api/health` retorna `mercadoPago: true` e `email: true`.
+Remetente temporario: `no-reply@samej.site` (dominio ja verificado no Resend).
+Apos verificar `learis.com.br` no Resend, trocar `EMAIL_FROM` para `no-reply@learis.com.br`.
 
 Arquivos criados para o deploy:
 
@@ -207,6 +210,8 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Pix real em producao**: `/api/health` com `mercadoPago: true`; conta de teste gerou cobranca
   de R$ 19,90 no MP (`status: pending`, `mpId`, QR Code e `ticket_url`), conta removida depois;
   endpoint do webhook respondeu `200 {"received":true}`
+- **E-mail real em producao**: `/api/health` com `email: true`; teste pelo proprio site gerou o token
+  de confirmacao, o Resend registrou o envio com `last_event: delivered`, e a conta de teste foi removida
 
 ## 11. Seguranca
 
@@ -223,10 +228,13 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   - Token da Vercel (`vcp_...`) — revogar em Vercel > Settings > Tokens
   - `MP_ACCESS_TOKEN` — gerar um novo no painel do Mercado Pago e atualizar `.env`/Vercel
     (o valor atual tambem apareceu em conversa e na doc do LotoBot)
+  - `RESEND_API_KEY` — criar nova chave no Resend e revogar a antiga (tambem divulgada em conversa/doc)
 
 ## 12. Pendencias
 
-1. **`RESEND_API_KEY`** + dominio `learis.com.br` verificado no Resend
+1. **Verificar `learis.com.br` no Resend** (dominio adicionado em 17/11/2026, id
+   `a50954c1-a025-4861-a506-e86f7ff536bf`; falta adicionar os registros DNS na HostGator e clicar em
+   *Verify*). Depois trocar `EMAIL_FROM` para `no-reply@learis.com.br` e fazer redeploy.
 2. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
 3. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
 4. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
@@ -235,7 +243,7 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 ## 13. Checklist de validacao em producao
 
 - [x] `/api/health` retorna `banco: supabase` e `tabelas: ok` (validado em producao)
-- [ ] `/api/auth/cadastro` cria usuario e o e-mail chega (usuario criado; falta o Resend)
+- [x] `/api/auth/cadastro` cria usuario e o e-mail de confirmacao e entregue (teste real no Resend)
 - [ ] Link de confirmacao abre `/confirmar-email.html` e confirma
 - [ ] Login leva para `/pagamento.html` (usuario sem pagamento)
 - [x] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90 (teste real em producao)

@@ -65,6 +65,7 @@ data/app.db                  Banco SQLite antigo (backup, nao e mais usado)
 - `PUBLIC_BASE_URL` — `http://localhost:3000` local, `https://learis.com.br` em producao
 - `MP_ACCESS_TOKEN` — Access Token do Mercado Pago (Pix)
 - `RESEND_API_KEY` — envio de e-mails (sem ela, os links aparecem no console e na tela)
+- `EMAIL_FROM` — remetente; use um dominio **verificado no Resend** (ex.: `Curso de Eletricista <no-reply@learis.com.br>`)
 - `VALOR_ACESSO` — preco do curso (padrao 19.9 = R$ 19,90)
 - `ALLOW_DEV_PAYMENT=1` — mostra o botao "Simular pagamento" apenas fora de producao
 

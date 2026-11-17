@@ -42,7 +42,11 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 
 ## 4. E-mails (Resend)
 
-- Verifique o dominio remetente (ex.: `learis.com.br`) no Resend e use um `EMAIL_FROM` desse dominio.
+- `RESEND_API_KEY` configurada em 17/11/2026 e validada com envio real (status `delivered`).
+- Remetente atual: `no-reply@samej.site` (dominio verificado no Resend).
+- `learis.com.br` ja foi adicionado no Resend (id `a50954c1-a025-4861-a506-e86f7ff536bf`,
+  regiao `sa-east-1`) mas ainda aguarda os registros DNS na HostGator. Depois de verificado,
+  troque `EMAIL_FROM` para `Curso de Eletricista <no-reply@learis.com.br>` e faca redeploy.
 - Sem `RESEND_API_KEY`, o sistema continua funcionando em modo local: o link de confirmacao/redefinicao aparece no console e na propria tela.
 - Templates ja estao em portugues: confirmacao de cadastro, redefinicao de senha e acesso liberado.
 
