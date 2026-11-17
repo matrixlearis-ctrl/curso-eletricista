@@ -211,6 +211,9 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   `localStorage` (`learis_progresso_v1`). Visual adaptado com a identidade do Curso de Eletricista,
   sem copiar textos/imagens do modelo. Validado no navegador: 30 aulas, 5 modulos, navegacao,
   player, marcacao, progresso, suporte (links em configuracao) e viewport 390x844 sem overflow.
+  Publicado em producao com o commit `d3997b9`; o deploy automatico foi bloqueado porque o autor
+  do commit nao tem permissao no projeto Vercel, entao o deploy foi disparado manualmente pela API
+  e ficou `READY`. Para evitar isso, usar a conta autorizada no `git config` ou liberar o autor no Vercel.
 - **Producao (Vercel + `learis.com.br`)**: `/api/health` e `/api/config` OK; cadastro → login →
   `/aulas` entregou as 30 aulas, Aula 28 e Aula 30 corretas; sem cookie `/aulas` redireciona (302);
   DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
