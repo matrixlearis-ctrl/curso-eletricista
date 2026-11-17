@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>Pagamento - Curso de Eletricista</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca"><span class="raio">⚡</span> Curso de Eletricista</div>
+  </header>
+
+  <main class="palco">
+    <section class="cartao">
+      <h1>Liberar seu acesso</h1>
+      <p class="apoio" id="saudacao">Carregando...</p>
+
+      <div id="aviso" class="aviso"></div>
+
+      <div class="resumo">
+        <span>Acesso completo ao curso<br><small style="color:#7f93b2">30 aulas em video</small></span>
+        <span class="valor" id="valor">R$ --</span>
+      </div>
+
+      <div id="etapa-gerar">
+        <button class="btn" type="button" id="btn-gerar">Gerar Pix</button>
+        <p class="dica" style="margin-top:10px;text-align:center;color:#7f93b2;font-size:13px">
+          Pagamento unico via Pix, confirmado na hora.
+        </p>
+      </div>
+
+      <div id="etapa-pix" class="escondido">
+        <ol class="passos">
+          <li>Abra o app do seu banco e escolha pagar com Pix.</li>
+          <li>Escaneie o QR Code abaixo ou use o codigo copia e cola.</li>
+          <li>Confirme o pagamento. A liberacao e automatica.</li>
+        </ol>
+
+        <img id="qr" class="qr" alt="QR Code do Pix" src="">
+        <div class="copia">
+          <input id="pix-codigo" type="text" readonly value="">
+          <button class="btn" type="button" id="btn-copiar">Copiar</button>
+        </div>
+
+        <a class="btn secundario" id="link-banco" href="#" target="_blank" rel="noopener" style="margin-bottom:10px">Abrir no navegador do banco</a>
+
+        <button class="btn contorno" type="button" id="btn-verificar">Ja paguei, verificar</button>
+        <p id="status" style="text-align:center;color:#9fb0cc;font-size:13px;margin:12px 0 0">Aguardando confirmacao...</p>
+      </div>
+
+      <div id="etapa-ok" class="escondido">
+        <div class="aviso visivel ok" style="margin-bottom:16px">Pagamento confirmado! Seu acesso esta liberado.</div>
+        <a class="btn" href="/aulas">Entrar nas aulas</a>
+      </div>
+
+      <div id="etapa-dev" class="escondido" style="margin-top:16px">
+        <button class="btn contorno" type="button" id="btn-simular">Simular pagamento (modo local)</button>
+      </div>
+
+      <div class="linha-links centro" style="margin-top:20px">
+        <a href="#" id="link-sair">Sair da conta</a>
+      </div>
+    </section>
+
+    <p class="rodape">Curso de Eletricista • learis.com.br</p>
+  </main>
+
+  <script src="/config-site.js"></script>
+  <script src="/auth.js"></script>
+  <script>
+    (function () {
+      const aviso = document.getElementById('aviso');
+      const saudacao = document.getElementById('saudacao');
+      const valorEl = document.getElementById('valor');
+      const etapaGerar = document.getElementById('etapa-gerar');
+      const etapaPix = document.getElementById('etapa-pix');
+      const etapaOk = document.getElementById('etapa-ok');
+      const etapaDev = document.getElementById('etapa-dev');
+      const btnGerar = document.getElementById('btn-gerar');
+      const btnCopiar = document.getElementById('btn-copiar');
+      const btnVerificar = document.getElementById('btn-verificar');
+      const btnSimular = document.getElementById('btn-simular');
+      const qr = document.getElementById('qr');
+      const codigo = document.getElementById('pix-codigo');
+      const statusEl = document.getElementById('status');
+      const linkBanco = document.getElementById('link-banco');
+
+      let mpIdAtual = null;
+      let timer = null;
+
+      document.getElementById('link-sair').addEventListener('click', function (e) {
+        e.preventDefault();
+        sair();
+      });
+
+      function formatarReal(v) {
+        return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+
+      function iniciarPolling() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(verificar, 5000);
+      }
+      function pararPolling() {
+        if (timer) clearInterval(timer);
+        timer = null;
+      }
+
+      async function verificar() {
+        if (!mpIdAtual) return;
+        const r = await api('/api/pagamento/status', { body: { mpId: mpIdAtual } });
+        if (r.ok && r.dados.liberado) {
+          pararPolling();
+          etapaPix.classList.add('escondido');
+          etapaOk.classList.remove('escondido');
+          esconderAviso(aviso);
+        }
+      }
+
+      btnGerar.addEventListener('click', async function () {
+        esconderAviso(aviso);
+        ocupado(btnGerar, 'Gerando Pix...');
+        const r = await api('/api/pagamento/pix', { body: {} });
+        liberarBotao(btnGerar);
+
+        if (!r.ok || !r.dados.success) {
+          if (r.dados && r.dados.liberado) {
+            window.location.href = '/aulas';
+            return;
+          }
+          mostrarAviso(aviso, 'erro', r.dados.message || 'Nao foi possivel gerar o Pix.');
+          return;
+        }
+
+        mpIdAtual = r.dados.mpId;
+        valorEl.textContent = formatarReal(r.dados.valor);
+
+        if (r.dados.qr_code_base64) {
+          qr.src = 'data:image/png;base64,' + r.dados.qr_code_base64;
+          qr.classList.remove('escondido');
+        } else {
+          qr.classList.add('escondido');
+        }
+        if (r.dados.qr_code) {
+          codigo.value = r.dados.qr_code;
+        } else {
+          document.querySelector('.copia').classList.add('escondido');
+        }
+        if (r.dados.ticket_url) {
+          linkBanco.href = r.dados.ticket_url;
+        } else {
+          linkBanco.classList.add('escondido');
+        }
+
+        etapaGerar.classList.add('escondido');
+        etapaPix.classList.remove('escondido');
+        statusEl.textContent = 'Aguardando confirmacao...';
+        iniciarPolling();
+      });
+
+      btnCopiar.addEventListener('click', async function () {
+        if (!codigo.value) return;
+        try {
+          await navigator.clipboard.writeText(codigo.value);
+          btnCopiar.textContent = 'Copiado!';
+          setTimeout(function () { btnCopiar.textContent = 'Copiar'; }, 2000);
+        } catch (e) {
+          codigo.select();
+          document.execCommand('copy');
+          btnCopiar.textContent = 'Copiado!';
+          setTimeout(function () { btnCopiar.textContent = 'Copiar'; }, 2000);
+        }
+      });
+
+      btnVerificar.addEventListener('click', async function () {
+        ocupado(btnVerificar, 'Verificando...');
+        await verificar();
+        liberarBotao(btnVerificar);
+        if (!etapaOk.classList.contains('escondido')) return;
+        statusEl.textContent = 'Ainda nao identificamos o pagamento. Se ja pagou, aguarde alguns segundos e verifique de novo.';
+      });
+
+      btnSimular.addEventListener('click', async function () {
+        ocupado(btnSimular, 'Simulando...');
+        const r = await api('/api/pagamento/simular', { body: {} });
+        liberarBotao(btnSimular);
+        if (r.ok && r.dados.success) {
+          pararPolling();
+          etapaPix.classList.add('escondido');
+          etapaGerar.classList.add('escondido');
+          etapaOk.classList.remove('escondido');
+        } else {
+          mostrarAviso(aviso, 'erro', r.dados.message || 'Falha na simulacao.');
+        }
+      });
+
+      // Carregamento inicial
+      (async function () {
+        const u = await usuarioAtual();
+        if (!u) {
+          window.location.href = '/index.html?proximo=%2Fpagamento.html';
+          return;
+        }
+        if (u.liberado) {
+          window.location.href = '/aulas';
+          return;
+        }
+        saudacao.textContent = 'Ola, ' + (u.nome || '').split(' ')[0] + '! Falta so o pagamento para liberar as aulas.';
+
+        const cfg = await api('/api/config');
+        const valor = (cfg.ok && cfg.dados.valor) || (window.CONFIG_SITE && window.CONFIG_SITE.valorAcesso) || 149;
+        valorEl.textContent = formatarReal(valor);
+        if (cfg.ok && cfg.dados.devPayment) etapaDev.classList.remove('escondido');
+      })();
+    })();
+  </script>
+</body>
+</html>

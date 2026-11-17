@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>Recuperar senha - Curso de Eletricista</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca"><span class="raio">⚡</span> Curso de Eletricista</div>
+  </header>
+
+  <main class="palco">
+    <section class="cartao">
+      <h1>Recuperar senha</h1>
+      <p class="apoio">Informe seu e-mail e enviaremos um link para criar uma nova senha.</p>
+
+      <div id="aviso" class="aviso"></div>
+
+      <form id="form-recuperar" novalidate>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+        </div>
+        <button class="btn" type="submit" id="btn-enviar">Enviar link</button>
+      </form>
+
+      <div class="linha-links centro">
+        <a href="/index.html">Voltar para o login</a>
+      </div>
+    </section>
+
+    <p class="rodape">Curso de Eletricista • learis.com.br</p>
+  </main>
+
+  <script src="/auth.js"></script>
+  <script>
+    (function () {
+      const aviso = document.getElementById('aviso');
+      const form = document.getElementById('form-recuperar');
+      const botao = document.getElementById('btn-enviar');
+
+      form.addEventListener('submit', async function (evento) {
+        evento.preventDefault();
+        esconderAviso(aviso);
+        const email = document.getElementById('email').value.trim();
+        if (!email) {
+          mostrarAviso(aviso, 'erro', 'Informe seu e-mail.');
+          return;
+        }
+
+        ocupado(botao, 'Enviando...');
+        const r = await api('/api/auth/solicitar-recuperacao', { body: { email: email } });
+        liberarBotao(botao);
+
+        let html = r.dados.message || 'Se existir uma conta com este e-mail, enviamos um link de recuperacao.';
+        if (r.dados.linkDev) {
+          html += '<br><span class="quebrar"><b>Modo local:</b> <a href="' + r.dados.linkDev + '">abrir o link de redefinicao</a></span>';
+        }
+        mostrarAviso(aviso, r.ok ? 'ok' : 'erro', html);
+      });
+    })();
+  </script>
+</body>
+</html>

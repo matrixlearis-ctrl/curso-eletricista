@@ -1,0 +1,11 @@
+/* Configuracoes publicas do site.
+   O valor real e a descricao vem do servidor (/api/config); estes valores
+   servem apenas como reserva caso a API nao responda. */
+window.CONFIG_SITE = {
+  nome: 'Curso de Eletricista',
+  dominio: 'learis.com.br',
+  valorAcesso: 149,
+  descricaoPagamento: 'Curso de Eletricista - Acesso completo',
+  suporteWhatsapp: '', // ex.: "5511999999999"
+  emailSuporte: ''
+};

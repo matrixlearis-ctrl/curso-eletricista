@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aulas - Curso de Eletricista</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121b2f;
+      --panel-2: #0f172a;
+      --text: #e5eefc;
+      --muted: #9fb0cc;
+      --accent: #22c55e;
+      --accent-2: #38bdf8;
+      --border: #24324d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #0b1220 0%, #0a1020 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(11, 18, 32, 0.95);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    .sub { margin: 0; color: var(--muted); }
+    .barra {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .usuario {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .usuario strong { color: var(--text); }
+    .btn-sair {
+      background: #334155;
+      color: #e5eefc;
+      border: 0;
+      font-weight: 700;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-sair:hover { filter: brightness(1.15); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      padding: 24px 0 40px;
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 14px; }
+      h1 { font-size: 22px; }
+      .sub { font-size: 14px; }
+      .grid { grid-template-columns: 1fr; gap: 14px; padding: 16px 0 28px; }
+      .card-head { padding: 12px 14px; }
+      .title { font-size: 16px; }
+      .card-body { padding: 12px 14px 14px; }
+      .btn { width: 100%; text-align: center; padding: 10px 12px; }
+      .actions { flex-direction: column; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .card-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-2);
+    }
+    .num {
+      display: inline-block;
+      font-size: 12px;
+      color: #052e16;
+      background: var(--accent);
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .title { margin: 0; font-size: 17px; }
+    .card-body { padding: 14px 16px 16px; }
+    .video {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #08101d;
+      border: 1px solid #24324d;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 12px;
+    }
+    .video iframe, .video video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .placeholder small { display: block; margin-top: 6px; color: #7f93b2; }
+    .actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      color: #04131d;
+      background: var(--accent-2);
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .btn.secondary { background: #334155; color: #e5eefc; }
+    .btn.disabled { opacity: .45; pointer-events: none; }
+    footer { color: var(--muted); font-size: 13px; padding: 0 0 30px; }
+    code { color: #cfe8ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="barra">
+        <div>
+          <h1>Curso de Eletricista</h1>
+          <p class="sub">Sua area de aulas: 30 videos. Toque em um video para assistir.</p>
+        </div>
+        <div class="usuario">
+          <span>Ola, <strong id="nome-usuario">aluno</strong></span>
+          <button type="button" class="btn-sair" id="btn-sair">Sair</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+
+      <article class="card" id="aula-1">
+        <div class="card-head"><span class="num">Aula 1</span><h2 class="title">Grandezas elétricas e conceito atômico</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/kWI5nNX62a4" title="Aula 1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=kWI5nNX62a4&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=1" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-2">
+        <div class="card-head"><span class="num">Aula 2</span><h2 class="title">Diferença de corrente contínua e alternada</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/V6mbwQFCj7Y" title="Aula 2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=V6mbwQFCj7Y&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=2" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-3">
+        <div class="card-head"><span class="num">Aula 3</span><h2 class="title">Cálculos básicos da elétrica (triângulo da tensão e da potência)</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/pqpeC7LW7TU" title="Aula 3" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=pqpeC7LW7TU&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=3" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-4">
+        <div class="card-head"><span class="num">Aula 4</span><h2 class="title">Condutores elétricos: tipos (barramento, cabo e fio) e padrão de cores dos cabos</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/gNjA8ZKfwZM" title="Aula 4" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=gNjA8ZKfwZM&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=4" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-5">
+        <div class="card-head"><span class="num">Aula 5</span><h2 class="title">Emendas elétricas (fio a fio) e isolantes elétricos</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/JUsCSB-cKmw" title="Aula 5" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=JUsCSB-cKmw&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=5" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-6">
+        <div class="card-head"><span class="num">Aula 6</span><h2 class="title">Emendas com conectores elétricos</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/eGa6fF8_hcw" title="Aula 6" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=eGa6fF8_hcw&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=6" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-7">
+        <div class="card-head"><span class="num">Aula 7</span><h2 class="title">Dimensionamento de cabos (conforme NBR 5410)</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/ht0dzPMVpFY" title="Aula 7" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=ht0dzPMVpFY&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=7" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-8">
+        <div class="card-head"><span class="num">Aula 8</span><h2 class="title">Segurança em serviços elétricos e EPIs (NR-10)</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/Gyr-90oMkxw" title="Aula 8" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=Gyr-90oMkxw&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=8" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-9">
+        <div class="card-head"><span class="num">Aula 9</span><h2 class="title">Disjuntores: tipos, aplicação, função, funcionamento e dimensionamento</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/Ba1ryYzhUg8" title="Aula 9" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=Ba1ryYzhUg8" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-10">
+        <div class="card-head"><span class="num">Aula 10</span><h2 class="title">DPS: tipos, aplicação, função, funcionamento e dimensionamento</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/U05SGUl5ffk" title="Aula 10" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=U05SGUl5ffk&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=10" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-11">
+        <div class="card-head"><span class="num">Aula 11</span><h2 class="title">IDR (DR): tipos, aplicação, função, funcionamento e dimensionamento</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/Lp2O1aGRMrM" title="Aula 11" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=Lp2O1aGRMrM&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=11" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-12">
+        <div class="card-head"><span class="num">Aula 12</span><h2 class="title">Ferramentas básicas de um eletricista e a função de cada uma</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/W409COEJgj8" title="Aula 12" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=W409COEJgj8&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=12" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-13">
+        <div class="card-head"><span class="num">Aula 13</span><h2 class="title">Como usar multímetro e alicate amperímetro</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/Um-a-uex6Uk" title="Aula 13" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=Um-a-uex6Uk&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=13" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-14">
+        <div class="card-head"><span class="num">Aula 14</span><h2 class="title">Instalação de interruptor simples</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/JilXshuxPDI" title="Aula 14" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=JilXshuxPDI&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=14" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-15">
+        <div class="card-head"><span class="num">Aula 15</span><h2 class="title">Instalação de interruptor duplo e triplo</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/9hIz2dcSnMo" title="Aula 15" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=9hIz2dcSnMo&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=15" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-16">
+        <div class="card-head"><span class="num">Aula 16</span><h2 class="title">Instalação de interruptor paralelo (three way) e intermediário (four way)</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/suj-wEmpFGI" title="Aula 16" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=suj-wEmpFGI&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=16" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-17">
+        <div class="card-head"><span class="num">Aula 17</span><h2 class="title">Instalação de tomadas conforme NBR 14136 e divisão de circuito conforme NBR 5410</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/lk5fcM0l5xg" title="Aula 17" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=lk5fcM0l5xg&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=17" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-18">
+        <div class="card-head"><span class="num">Aula 18</span><h2 class="title">Instalação de tomadas simples, dupla e tripla de 10 A e 20 A na prática</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/HsvG2L07Yoc" title="Aula 18" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=HsvG2L07Yoc&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=18" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-19">
+        <div class="card-head"><span class="num">Aula 19</span><h2 class="title">Instalação de tomada com interruptor no mesmo ponto</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/JyQPFWzNz5Y" title="Aula 19" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=JyQPFWzNz5Y&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=19" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-20">
+        <div class="card-head"><span class="num">Aula 20</span><h2 class="title">Instalação de sensor de presença (com e sem interruptor)</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/H4m73_e0EHc" title="Aula 20" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=H4m73_e0EHc&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=20" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-21">
+        <div class="card-head"><span class="num">Aula 21</span><h2 class="title">Instalação de ventilador de teto com lâmpada</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/vqlNpw4ihik" title="Aula 21" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=vqlNpw4ihik&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=21" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-22">
+        <div class="card-head"><span class="num">Aula 22</span><h2 class="title">Instalação de chuveiro</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/Y-ba6TyQ2Ss" title="Aula 22" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=Y-ba6TyQ2Ss&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=22" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-23">
+        <div class="card-head"><span class="num">Aula 23</span><h2 class="title">Troca de chuveiro em situação real com problemas</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/N8_sBuDMUXo" title="Aula 23" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=N8_sBuDMUXo&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=23" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-24">
+        <div class="card-head"><span class="num">Aula 24</span><h2 class="title">Reais funções do aterramento (diferenças entre esquemas TT e TN)</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/IK0KOXY0v60" title="Aula 24" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=IK0KOXY0v60" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-25">
+        <div class="card-head"><span class="num">Aula 25</span><h2 class="title">Passo a passo de como fazer aterramento TN-S</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/AwyfUso6M8s" title="Aula 25" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=AwyfUso6M8s&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=25" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-26">
+        <div class="card-head"><span class="num">Aula 26</span><h2 class="title">O que fazer quando não há aterramento</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/nByPkvsqNFQ" title="Aula 26" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=nByPkvsqNFQ&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=26" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-27">
+        <div class="card-head"><span class="num">Aula 27</span><h2 class="title">Instalação e dimensionamento de dispositivos de quadro de distribuição monofásico</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/7iTvRNVCw2E" title="Aula 27" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=7iTvRNVCw2E&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=27" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-28">
+        <div class="card-head"><span class="num">Aula 28</span><h2 class="title">Instalação de quadro de distribuição monofásico na prática</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/JyQPFWzNz5Y" title="Aula 28" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=JyQPFWzNz5Y&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=28" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-29">
+        <div class="card-head"><span class="num">Aula 29</span><h2 class="title">Instalação e dimensionamento de dispositivos de quadro de distribuição bifásico</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://www.youtube.com/embed/tZaomVwYhUI" title="Aula 29" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://www.youtube.com/watch?v=tZaomVwYhUI&list=PLd6l-w6vqkyMsns7AwnWYnvovusPkWAmi&index=29" target="_blank" rel="noopener">Assistir no YouTube</a></div>
+        </div>
+      </article>
+
+      <article class="card" id="aula-30">
+        <div class="card-head"><span class="num">Aula 30</span><h2 class="title">Instalação de quadro de distribuição bifásico na prática</h2></div>
+        <div class="card-body">
+          <div class="video"><iframe src="https://player.vimeo.com/video/1123237183" title="Aula 30" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+          <div class="actions"><a class="btn" href="https://vimeo.com/1123237183?fl=pl&fe=vl" target="_blank" rel="noopener">Assistir no Vimeo</a></div>
+        </div>
+      </article>
+
+    </div>
+
+    <footer>
+      <p><strong>Dica:</strong> se o player do YouTube mostrar erro, recarregue a pagina. Voce tambem pode abrir o video direto no YouTube pelo botao de cada aula.</p>
+      <p>Curso de Eletricista • learis.com.br</p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      fetch('/api/auth/me', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.success || !d.user) return;
+          var alvo = document.getElementById('nome-usuario');
+          if (alvo) alvo.textContent = String(d.user.nome || '').split(' ')[0] || 'aluno';
+        })
+        .catch(function () {});
+
+      var btn = document.getElementById('btn-sair');
+      if (btn) {
+        btn.addEventListener('click', function () {
+          btn.disabled = true;
+          btn.textContent = 'Saindo...';
+          fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(function () {
+            window.location.href = '/index.html';
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

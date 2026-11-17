@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>Entrar - Curso de Eletricista</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca"><span class="raio">⚡</span> Curso de Eletricista</div>
+  </header>
+
+  <main class="palco">
+    <section class="cartao">
+      <h1>Entrar na sua conta</h1>
+      <p class="apoio">Acesse as 30 aulas do curso no celular ou no computador.</p>
+
+      <div id="aviso" class="aviso"></div>
+
+      <form id="form-login" novalidate>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input id="senha" name="senha" type="password" autocomplete="current-password" placeholder="Sua senha" required>
+        </div>
+
+        <button class="btn" type="submit" id="btn-entrar">Entrar</button>
+      </form>
+
+      <div class="linha-links">
+        <a href="/cadastro.html">Criar conta</a>
+        <a href="/recuperar-senha.html">Esqueci minha senha</a>
+      </div>
+    </section>
+
+    <p class="rodape">Curso de Eletricista • learis.com.br</p>
+  </main>
+
+  <script src="/config-site.js"></script>
+  <script src="/auth.js"></script>
+  <script>
+    (function () {
+      const aviso = document.getElementById('aviso');
+      const form = document.getElementById('form-login');
+      const botao = document.getElementById('btn-entrar');
+
+      // Se ja estiver logado, manda direto para o destino certo.
+      usuarioAtual().then(function (u) {
+        if (!u) return;
+        window.location.href = u.liberado ? '/aulas' : '/pagamento.html';
+      });
+
+      form.addEventListener('submit', async function (evento) {
+        evento.preventDefault();
+        esconderAviso(aviso);
+
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('senha').value;
+
+        if (!email || !senha) {
+          mostrarAviso(aviso, 'erro', 'Informe seu e-mail e sua senha.');
+          return;
+        }
+
+        ocupado(botao, 'Entrando...');
+        const r = await api('/api/auth/login', { body: { email: email, senha: senha } });
+        liberarBotao(botao);
+
+        if (!r.ok || !r.dados.success) {
+          let msg = r.dados.message || 'Nao foi possivel entrar.';
+          if (r.dados.precisaConfirmar) {
+            msg += ' <a href="/cadastro.html?reenviar=' + encodeURIComponent(email) + '">Reenviar e-mail de confirmacao</a>';
+          }
+          mostrarAviso(aviso, 'erro', msg);
+          return;
+        }
+
+        const usuario = r.dados.user || {};
+        window.location.href = usuario.liberado ? '/aulas' : '/pagamento.html';
+      });
+    })();
+  </script>
+</body>
+</html>

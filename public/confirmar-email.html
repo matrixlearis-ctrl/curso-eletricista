@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>Confirmar e-mail - Curso de Eletricista</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca"><span class="raio">⚡</span> Curso de Eletricista</div>
+  </header>
+
+  <main class="palco">
+    <section class="cartao">
+      <h1>Confirmacao de e-mail</h1>
+      <p class="apoio" id="apoio">Validando seu link...</p>
+
+      <div id="aviso" class="aviso info visivel">Aguarde um instante enquanto confirmamos seu e-mail.</div>
+
+      <div id="acoes" class="escondido">
+        <a class="btn" href="/index.html">Ir para o login</a>
+      </div>
+    </section>
+
+    <p class="rodape">Curso de Eletricista • learis.com.br</p>
+  </main>
+
+  <script src="/auth.js"></script>
+  <script>
+    (function () {
+      const aviso = document.getElementById('aviso');
+      const apoio = document.getElementById('apoio');
+      const acoes = document.getElementById('acoes');
+      const token = new URLSearchParams(window.location.search).get('t');
+
+      if (!token) {
+        apoio.textContent = 'Link incompleto.';
+        mostrarAviso(aviso, 'erro', 'Este link de confirmacao esta incompleto. Abra o link enviado no seu e-mail ou solicite um novo.');
+        acoes.classList.remove('escondido');
+        return;
+      }
+
+      api('/api/auth/confirmar-email?t=' + encodeURIComponent(token)).then(function (r) {
+        if (r.ok && r.dados.success) {
+          apoio.textContent = 'Tudo certo!';
+          mostrarAviso(aviso, 'ok', r.dados.message || 'E-mail confirmado! Agora e so entrar.');
+        } else {
+          apoio.textContent = 'Nao foi possivel confirmar.';
+          mostrarAviso(aviso, 'erro', (r.dados.message || 'Link invalido ou expirado.') +
+            ' <a href="/cadastro.html">Solicitar novo link</a>');
+        }
+        acoes.classList.remove('escondido');
+      });
+    })();
+  </script>
+</body>
+</html>
