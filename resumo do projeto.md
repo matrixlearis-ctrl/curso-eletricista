@@ -98,7 +98,24 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 
 ## 6. Deploy — Vercel
 
-Arquivos criados para isso:
+**Publicado em 17/11/2026 e apontado para o dominio final.**
+
+| Item | Estado |
+| --- | --- |
+| URL publica | `https://learis.com.br` (e `www.learis.com.br`) |
+| Alias Vercel | `https://curso-eletricista.vercel.app` |
+| Projeto Vercel | `curso-eletricista` — id `prj_KlVm7uMSmYTpFJ2bxSfQpM9RP5Vv` |
+| Conta Vercel | `matrixlearis@gmail.com` (Hobby) |
+| Repo conectado | `matrixlearis-ctrl/curso-eletricista`, branch `main`, deploy automatico |
+| DNS HostGator | A `@` → `76.76.21.21`; CNAME `www` → `cname.vercel-dns.com` |
+| HTTPS | certificado emitido e valido nos dois dominios |
+| Variaveis | 8 preenchidas (Supabase, valor 19.9, NODE_ENV=production, etc.) |
+| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK |
+
+Variaveis ainda nao preenchidas na Vercel (adicionar e fazer redeploy quando tiver):
+`MP_ACCESS_TOKEN` e `RESEND_API_KEY`.
+
+Arquivos criados para o deploy:
 
 | Arquivo | Funcao |
 | --- | --- |
@@ -181,6 +198,9 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Pagina de aulas em HTTP** (`localhost`): 30 cards, sem erros no console
   → o erro 153 do YouTube era causado por abrir via `file://`
 - **Mobile** (viewport 390x844): sem overflow horizontal em aulas, login e pagamento
+- **Producao (Vercel + `learis.com.br`)**: `/api/health` e `/api/config` OK; cadastro → login →
+  `/aulas` entregou as 30 aulas, Aula 28 e Aula 30 corretas; sem cookie `/aulas` redireciona (302);
+  DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
 
 ## 11. Seguranca
 
@@ -194,26 +214,25 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Segredos que passaram por conversa e devem ser rotacionados:**
   - `SUPABASE_SERVICE_ROLE_KEY` (colar no `.env`/Vercel e apagar a antiga no painel)
   - Token do GitHub (`github_pat_...`) — revogar em Settings > Developer settings
+  - Token da Vercel (`vcp_...`) — revogar em Vercel > Settings > Tokens
   - `MP_ACCESS_TOKEN` — gerar um novo no painel do Mercado Pago
 
 ## 12. Pendencias
 
-1. **`MP_ACCESS_TOKEN` real** — sem ele o Pix nao funciona (so a simulacao local)
+1. **`MP_ACCESS_TOKEN` real** — sem ele o Pix nao funciona (nao ha simulacao em producao)
 2. **`RESEND_API_KEY`** + dominio `learis.com.br` verificado no Resend
-3. **Deploy na Vercel** — importar o repo, cadastrar as variaveis e apontar o dominio
-4. **Webhook** `https://learis.com.br/api/mercadopago/webhook` cadastrado no Mercado Pago
-5. **Rotacionar os segredos** listados na secao 11
-6. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
-7. Opcional: pagina de vendas publica, painel do aluno com progresso, marcacao de aulas assistidas
+3. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel)
+4. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
+5. Opcional: pagina de vendas publica, painel do aluno com progresso, marcacao de aulas assistidas
 
 ## 13. Checklist de validacao em producao
 
-- [ ] `/api/health` retorna `banco: supabase` e `tabelas: ok`
-- [ ] `/api/auth/cadastro` cria usuario e o e-mail chega
+- [x] `/api/health` retorna `banco: supabase` e `tabelas: ok` (validado em producao)
+- [ ] `/api/auth/cadastro` cria usuario e o e-mail chega (usuario criado; falta o Resend)
 - [ ] Link de confirmacao abre `/confirmar-email.html` e confirma
 - [ ] Login leva para `/pagamento.html` (usuario sem pagamento)
 - [ ] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90
 - [ ] Webhook aprova e libera o usuario automaticamente
-- [ ] `/aulas` abre com as 30 aulas so para aluno liberado
+- [x] `/aulas` abre com as 30 aulas so para aluno liberado (validado em producao)
 - [ ] E-mail "acesso liberado" chega ao aluno
 - [ ] Layout conferido no celular (a maioria dos alunos assiste pelo telefone)

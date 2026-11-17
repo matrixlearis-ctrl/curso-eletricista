@@ -78,6 +78,11 @@ Em producao esse botao nao existe.
 
 ## Publicacao na Vercel
 
+**Ja publicado (17/11/2026):** `https://learis.com.br` (e `www.learis.com.br`), projeto Vercel
+`curso-eletricista` conectado ao GitHub `matrixlearis-ctrl/curso-eletricista`, branch `main`.
+DNS na HostGator: A `@` → `76.76.21.21` e CNAME `www` → `cname.vercel-dns.com`.
+Certificado HTTPS emitido. Teste de producao: cadastro → login → `/aulas` com as 30 aulas OK.
+
 O projeto ja vem preparado para a Vercel (serverless):
 
 - `api/index.js` — entrada da funcao (exporta o Express, sem `app.listen`)
