@@ -15,7 +15,7 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 | `MP_ACCESS_TOKEN` | Access Token do Mercado Pago (producao) |
 | `RESEND_API_KEY` | chave da API do Resend |
 | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
-| `VALOR_ACESSO` | `149` (ou o preco definido) |
+| `VALOR_ACESSO` | `19.9` (R$ 19,90) |
 | `DESCRICAO_PAGAMENTO` | `Curso de Eletricista - Acesso completo` |
 | `SESSAO_DIAS` | `30` |
 | `NODE_ENV` | `production` |
@@ -46,12 +46,30 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 - Sem `RESEND_API_KEY`, o sistema continua funcionando em modo local: o link de confirmacao/redefinicao aparece no console e na propria tela.
 - Templates ja estao em portugues: confirmacao de cadastro, redefinicao de senha e acesso liberado.
 
-## 5. Hospedagem
+## 5. Hospedagem (Vercel)
 
-- Plano compartilhado tradicional da HostGator (PHP/cPanel) **nao executa Node.js**.
-- Opcoes compativeis: VPS, plano com suporte a Node da HostGator, ou plataformas como Railway/Render.
-- Passos: enviar o projeto sem `node_modules` e sem `.env` → `npm install --omit=dev` → definir variaveis → `npm start` (ou PM2) → apontar o dominio e ativar SSL.
-- O arquivo `data/app.db` precisa ficar em disco persistente (nao use ambiente serverless com filesystem efemero).
+O projeto esta preparado para a Vercel (serverless):
+
+- `api/index.js` exporta o app Express (sem abrir porta)
+- `vercel.json` manda todas as rotas para a funcao e inclui `public/` e `private/`
+- `.vercelignore` deixa de fora `.env`, `data/` e `node_modules/`
+
+Passos:
+
+1. <https://vercel.com/new> → importar o repositorio `matrixlearis-ctrl/curso-eletricista`
+2. Framework Preset **Other**; build command e output vazios
+3. Cadastrar as variaveis da secao 1 em **Environment Variables** (sem `ALLOW_DEV_PAYMENT`)
+4. **Deploy** → testar na URL `*.vercel.app`
+5. **Settings → Domains** → adicionar `learis.com.br` e `www.learis.com.br` e criar os DNS indicados
+6. Cadastrar o webhook do Mercado Pago com o dominio final
+
+Observacoes:
+
+- Nao existe disco local na Vercel: por isso o banco e o Supabase (nada de `data/app.db`)
+- Funcao Hobby tem ~10s por requisicao — suficiente para este app
+- Regiao padrao `iad1`; se o Supabase estiver no Brasil, use `"regions": ["gru1"]` no `vercel.json`
+- Plano compartilhado da HostGator (PHP/cPanel) **nao executa Node.js**; VPS/Railway tambem funcionam,
+  basta rodar `npm start`
 
 ## 6. Seguranca
 

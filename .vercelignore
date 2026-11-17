@@ -1,0 +1,7 @@
+# Nao enviar para a Vercel
+.git
+.env
+data
+node_modules
+*.log
+Capturar.JPG

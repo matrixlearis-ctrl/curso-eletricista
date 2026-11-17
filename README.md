@@ -46,6 +46,8 @@ Acesse `http://localhost:3000`. A janela preta precisa ficar aberta: ela e o ser
 ## Estrutura
 
 ```
+api/index.js                 Entrada da Vercel (exporta o app; nao abre porta)
+vercel.json                  Configuracao de deploy na Vercel
 server.js                    Backend (Express + Supabase + Mercado Pago + Resend)
 supabase/schema.sql          Tabelas que devem ser criadas no Supabase
 verificar-supabase.js        Testa a conexao com o Supabase
@@ -63,7 +65,7 @@ data/app.db                  Banco SQLite antigo (backup, nao e mais usado)
 - `PUBLIC_BASE_URL` — `http://localhost:3000` local, `https://learis.com.br` em producao
 - `MP_ACCESS_TOKEN` — Access Token do Mercado Pago (Pix)
 - `RESEND_API_KEY` — envio de e-mails (sem ela, os links aparecem no console e na tela)
-- `VALOR_ACESSO` — preco do curso (padrao 149)
+- `VALOR_ACESSO` — preco do curso (padrao 19.9 = R$ 19,90)
 - `ALLOW_DEV_PAYMENT=1` — mostra o botao "Simular pagamento" apenas fora de producao
 
 **Nunca** coloque o `.env` em repositorio ou em pasta publica.
@@ -74,10 +76,48 @@ Com `ALLOW_DEV_PAYMENT=1` e `NODE_ENV=development`, a pagina de pagamento mostra
 o botao **Simular pagamento (modo local)**, que libera o acesso para testar as aulas.
 Em producao esse botao nao existe.
 
-## Publicacao
+## Publicacao na Vercel
 
-Precisa de um ambiente com **Node.js** (VPS, plano Node, Railway, Render...).
-Plano compartilhado tradicional da HostGator normalmente nao executa Node.
+O projeto ja vem preparado para a Vercel (serverless):
+
+- `api/index.js` — entrada da funcao (exporta o Express, sem `app.listen`)
+- `vercel.json` — manda todas as rotas para a funcao e inclui `public/` e `private/`
+- `.vercelignore` — nao envia `.env`, `data/`, `node_modules`
+
+Passo a passo:
+
+1. Em <https://vercel.com/new>, importe o repositorio `matrixlearis-ctrl/curso-eletricista`
+2. Framework Preset: **Other** (nao e Next.js). Build command e Output: deixe vazio
+3. Em **Environment Variables**, cadastre:
+
+   | Variavel | Valor |
+   | --- | --- |
+   | `SUPABASE_URL` | `https://vvsyquozzttiivgsswfz.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | chave secreta do Supabase |
+   | `PUBLIC_BASE_URL` | `https://learis.com.br` |
+   | `MP_ACCESS_TOKEN` | token do Mercado Pago |
+   | `RESEND_API_KEY` | chave do Resend |
+   | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
+   | `VALOR_ACESSO` | `19.9` |
+   | `NODE_ENV` | `production` |
+
+   **Nao** defina `ALLOW_DEV_PAYMENT` (o botao de simulacao nunca aparece em producao).
+
+4. Clique em **Deploy**. O site sai em `https://curso-eletricista.vercel.app`
+5. Em **Settings → Domains**, adicione `learis.com.br` e `www.learis.com.br`
+   e crie os registros DNS que a Vercel mostrar (A / CNAME)
+6. No Mercado Pago, configure o webhook `https://learis.com.br/api/mercadopago/webhook`
+
+### Observacoes da Vercel
+
+- Nao ha disco local: tudo grava no Supabase (por isso o banco e externo)
+- A funcao roda por ~10s por requisicao (padrao Hobby) — suficiente para este app
+- Regiao padrao `iad1` (EUA). Se o Supabase estiver em Sao Paulo, adicione em
+  `vercel.json`: `"regions": ["gru1"]`
+- Cada deploy cria uma URL nova; `PUBLIC_BASE_URL` fixa em `https://learis.com.br`
+  mantem os links de e-mail e do webhook sempre no dominio certo
+
+### Alternativa: servidor tradicional (VPS)
 
 1. Enviar o projeto (sem `node_modules` e sem `.env`)
 2. Rodar `npm install --omit=dev`

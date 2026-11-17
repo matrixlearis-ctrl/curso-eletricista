@@ -4,7 +4,7 @@
 window.CONFIG_SITE = {
   nome: 'Curso de Eletricista',
   dominio: 'learis.com.br',
-  valorAcesso: 149,
+  valorAcesso: 19.9,
   descricaoPagamento: 'Curso de Eletricista - Acesso completo',
   suporteWhatsapp: '', // ex.: "5511999999999"
   emailSuporte: ''

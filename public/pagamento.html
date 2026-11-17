@@ -210,7 +210,7 @@
         saudacao.textContent = 'Ola, ' + (u.nome || '').split(' ')[0] + '! Falta so o pagamento para liberar as aulas.';
 
         const cfg = await api('/api/config');
-        const valor = (cfg.ok && cfg.dados.valor) || (window.CONFIG_SITE && window.CONFIG_SITE.valorAcesso) || 149;
+        const valor = (cfg.ok && cfg.dados.valor) || (window.CONFIG_SITE && window.CONFIG_SITE.valorAcesso) || 19.9;
         valorEl.textContent = formatarReal(valor);
         if (cfg.ok && cfg.dados.devPayment) etapaDev.classList.remove('escondido');
       })();

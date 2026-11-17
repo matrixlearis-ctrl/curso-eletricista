@@ -77,8 +77,9 @@ Para testes locais sem Mercado Pago, o `.env` tem `ALLOW_DEV_PAYMENT=1`
 4. `PUBLIC_BASE_URL=https://learis.com.br`
 5. `NODE_ENV=production` (desativa o modo de simulacao)
 6. Webhook `https://learis.com.br/api/mercadopago/webhook` acessivel por HTTPS
-7. Hospedagem com **Node.js**: plano compartilhado da HostGator nao executa Node → VPS/plano Node/Railway/Render
-8. Definir o preco final em `VALOR_ACESSO`
+7. Hospedagem: **Vercel** (ja configurada via `api/index.js` + `vercel.json` + `.vercelignore`)
+   - Plano compartilhado da HostGator nao executa Node; VPS/Railway tambem funcionam
+8. Preco definido: **R$ 19,90** (`VALOR_ACESSO=19.9`)
 
 ## 7. Proximos passos
 1. Confirmar o link correto da **Aula 28**

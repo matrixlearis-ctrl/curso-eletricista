@@ -16,11 +16,16 @@ app.set('trust proxy', 1);
 
 // ---------------------------------------------------------------- config
 const PORT = Number(process.env.PORT || 3000);
-const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`).replace(/\/+$/, '');
+// PUBLIC_BASE_URL: em producao use https://learis.com.br.
+// Na Vercel, se nao estiver definida, cai no dominio do deploy (preview funciona).
+const PUBLIC_BASE_URL = (
+  process.env.PUBLIC_BASE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${PORT}`)
+).replace(/\/+$/, '');
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'Curso de Eletricista <no-reply@learis.com.br>';
-const VALOR_ACESSO = Number(process.env.VALOR_ACESSO || 149);
+const VALOR_ACESSO = Number(process.env.VALOR_ACESSO || 19.9);
 const DESCRICAO_PAGAMENTO = process.env.DESCRICAO_PAGAMENTO || 'Curso de Eletricista - Acesso completo';
 const SESSAO_DIAS = Number(process.env.SESSAO_DIAS || 30);
 const COOKIE_NAME = 'learis_sessao';
@@ -299,8 +304,12 @@ async function limparExpirados() {
     console.warn('[LIMPEZA]', e.message);
   }
 }
-setTimeout(limparExpirados, 5000).unref?.();
-setInterval(limparExpirados, 6 * 3600 * 1000).unref?.();
+// Na Vercel (serverless) o processo dorme entre requisicoes, entao essa limpeza
+// periodica so roda em servidor tradicional. As consultas ja ignoram expirados.
+if (!process.env.VERCEL) {
+  setTimeout(limparExpirados, 5000).unref?.();
+  setInterval(limparExpirados, 6 * 3600 * 1000).unref?.();
+}
 
 // ---------------------------------------------------------------- e-mail
 async function enviarEmail(para, assunto, html) {
@@ -786,12 +795,19 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n  Curso de Eletricista rodando em http://localhost:${PORT}`);
-  console.log(`  Base publica: ${PUBLIC_BASE_URL}`);
-  console.log(`  Banco: ${BANCO_CONFIGURADO ? SUPABASE_URL : 'NAO configurado (falta SUPABASE_SERVICE_ROLE_KEY no .env)'}`);
-  console.log(`  Mercado Pago: ${MP_ACCESS_TOKEN ? 'configurado' : 'NAO configurado (MP_ACCESS_TOKEN vazio)'}`);
-  console.log(`  E-mail: ${RESEND_API_KEY ? 'configurado' : 'NAO configurado (links aparecem no console)'}`);
-  if (ALLOW_DEV_PAYMENT) console.log('  Modo local: simulacao de pagamento ATIVADA');
-  console.log('');
-});
+// ---------------------------------------------------------------- execucao
+// Em servidor tradicional (npm start) sobe o HTTP.
+// Na Vercel o arquivo e importado por api/index.js, que exporta o app.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n  Curso de Eletricista rodando em http://localhost:${PORT}`);
+    console.log(`  Base publica: ${PUBLIC_BASE_URL}`);
+    console.log(`  Banco: ${BANCO_CONFIGURADO ? SUPABASE_URL : 'NAO configurado (falta SUPABASE_SERVICE_ROLE_KEY no .env)'}`);
+    console.log(`  Mercado Pago: ${MP_ACCESS_TOKEN ? 'configurado' : 'NAO configurado (MP_ACCESS_TOKEN vazio)'}`);
+    console.log(`  E-mail: ${RESEND_API_KEY ? 'configurado' : 'NAO configurado (links aparecem no console)'}`);
+    if (ALLOW_DEV_PAYMENT) console.log('  Modo local: simulacao de pagamento ATIVADA');
+    console.log('');
+  });
+}
+
+module.exports = app;
