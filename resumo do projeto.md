@@ -116,8 +116,9 @@ Todas as variaveis estao preenchidas na Vercel. Em 17/11/2026 foram configurados
 `MP_ACCESS_TOKEN` (token de producao da conta MP usada no LotoBot, validado via `GET /users/me`)
 e `RESEND_API_KEY` (chave do Resend do LotoBot, validada com envio real).
 `/api/health` retorna `mercadoPago: true` e `email: true`.
-Remetente temporario: `no-reply@samej.site` (dominio ja verificado no Resend).
-Apos verificar `learis.com.br` no Resend, trocar `EMAIL_FROM` para `no-reply@learis.com.br`.
+Dominio `learis.com.br` verificado no Resend em 17/11/2026 (DKIM, MX, TXT e CNAME conferidos
+no DNS e validados pela API). Remetente final: `Curso de Eletricista <no-reply@learis.com.br>`,
+com envio real confirmado (`de=no-reply@learis.com.br`, `last_event: delivered`).
 
 Arquivos criados para o deploy:
 
@@ -232,13 +233,10 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 
 ## 12. Pendencias
 
-1. **Verificar `learis.com.br` no Resend** (dominio adicionado em 17/11/2026, id
-   `a50954c1-a025-4861-a506-e86f7ff536bf`; falta adicionar os registros DNS na HostGator e clicar em
-   *Verify*). Depois trocar `EMAIL_FROM` para `no-reply@learis.com.br` e fazer redeploy.
-2. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
-3. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
-4. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
-5. Opcional: pagina de vendas publica, painel do aluno com progresso, marcacao de aulas assistidas
+1. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
+2. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
+3. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
+4. Opcional: pagina de vendas publica, painel do aluno com progresso, marcacao de aulas assistidas
 
 ## 13. Checklist de validacao em producao
 

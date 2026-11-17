@@ -43,10 +43,11 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 ## 4. E-mails (Resend)
 
 - `RESEND_API_KEY` configurada em 17/11/2026 e validada com envio real (status `delivered`).
-- Remetente atual: `no-reply@samej.site` (dominio verificado no Resend).
-- `learis.com.br` ja foi adicionado no Resend (id `a50954c1-a025-4861-a506-e86f7ff536bf`,
-  regiao `sa-east-1`) mas ainda aguarda os registros DNS na HostGator. Depois de verificado,
-  troque `EMAIL_FROM` para `Curso de Eletricista <no-reply@learis.com.br>` e faca redeploy.
+- Remetente final: `Curso de Eletricista <no-reply@learis.com.br>` (envio real confirmado como `delivered`).
+- `learis.com.br` verificado no Resend em 17/11/2026 (id `a50954c1-a025-4861-a506-e86f7ff536bf`,
+  regiao `sa-east-1`). Registros DNS na HostGator: TXT `resend._domainkey`, MX `send` (prioridade 10,
+  `feedback-smtp.sa-east-1.amazonses.com`), TXT `send` (`v=spf1 include:amazonses.com ~all`) e
+  CNAME `rsend` → `send.forge.rmta.net`.
 - Sem `RESEND_API_KEY`, o sistema continua funcionando em modo local: o link de confirmacao/redefinicao aparece no console e na propria tela.
 - Templates ja estao em portugues: confirmacao de cadastro, redefinicao de senha e acesso liberado.
 
