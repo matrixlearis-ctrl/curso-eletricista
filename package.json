@@ -2,7 +2,7 @@
   "name": "curso-eletricista-learis",
   "version": "1.0.0",
   "private": true,
-  "description": "Curso de Eletricista - area de aulas com login e pagamento Pix (Mercado Pago)",
+  "description": "Curso de Eletricista - area de aulas com login e pagamento Pix (PagBank)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

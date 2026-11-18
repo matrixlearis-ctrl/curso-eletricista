@@ -25,6 +25,11 @@
       </div>
 
       <div id="etapa-gerar">
+        <div class="campo">
+          <label for="cpf">CPF do pagador</label>
+          <input id="cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14">
+          <span class="dica">O PagBank exige o CPF para emitir o QR Code Pix.</span>
+        </div>
         <button class="btn" type="button" id="btn-gerar">Gerar Pix</button>
         <p class="dica" style="margin-top:10px;text-align:center;color:#7f93b2;font-size:13px">
           Pagamento unico via Pix, confirmado na hora.
@@ -43,8 +48,6 @@
           <input id="pix-codigo" type="text" readonly value="">
           <button class="btn" type="button" id="btn-copiar">Copiar</button>
         </div>
-
-        <a class="btn secundario" id="link-banco" href="#" target="_blank" rel="noopener" style="margin-bottom:10px">Abrir no navegador do banco</a>
 
         <button class="btn contorno" type="button" id="btn-verificar">Ja paguei, verificar</button>
         <p id="status" style="text-align:center;color:#9fb0cc;font-size:13px;margin:12px 0 0">Aguardando confirmacao...</p>
@@ -79,16 +82,27 @@
       const etapaOk = document.getElementById('etapa-ok');
       const etapaDev = document.getElementById('etapa-dev');
       const btnGerar = document.getElementById('btn-gerar');
+      const cpfInput = document.getElementById('cpf');
       const btnCopiar = document.getElementById('btn-copiar');
       const btnVerificar = document.getElementById('btn-verificar');
       const btnSimular = document.getElementById('btn-simular');
       const qr = document.getElementById('qr');
       const codigo = document.getElementById('pix-codigo');
       const statusEl = document.getElementById('status');
-      const linkBanco = document.getElementById('link-banco');
 
-      let mpIdAtual = null;
+      let chargeIdAtual = null;
       let timer = null;
+
+      function mascaraCpf(valor) {
+        const n = String(valor || '').replace(/\D/g, '').slice(0, 11);
+        return n.replace(/(\d{3})(\d)/, '$1.$2')
+          .replace(/(\d{3})(\d)/, '$1.$2')
+          .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      }
+
+      cpfInput.addEventListener('input', function () {
+        cpfInput.value = mascaraCpf(cpfInput.value);
+      });
 
       document.getElementById('link-sair').addEventListener('click', function (e) {
         e.preventDefault();
@@ -109,8 +123,8 @@
       }
 
       async function verificar() {
-        if (!mpIdAtual) return;
-        const r = await api('/api/pagamento/status', { body: { mpId: mpIdAtual } });
+        if (!chargeIdAtual) return;
+        const r = await api('/api/pagamento/status', { body: { chargeId: chargeIdAtual } });
         if (r.ok && r.dados.liberado) {
           pararPolling();
           etapaPix.classList.add('escondido');
@@ -121,8 +135,14 @@
 
       btnGerar.addEventListener('click', async function () {
         esconderAviso(aviso);
+        const cpf = String(cpfInput.value || '').replace(/\D/g, '');
+        if (cpf.length !== 11) {
+          mostrarAviso(aviso, 'erro', 'Informe o CPF do pagador para gerar o Pix.');
+          cpfInput.focus();
+          return;
+        }
         ocupado(btnGerar, 'Gerando Pix...');
-        const r = await api('/api/pagamento/pix', { body: {} });
+        const r = await api('/api/pagamento/pix', { body: { cpf } });
         liberarBotao(btnGerar);
 
         if (!r.ok || !r.dados.success) {
@@ -134,7 +154,8 @@
           return;
         }
 
-        mpIdAtual = r.dados.mpId;
+        chargeIdAtual = r.dados.chargeId;
+        try { localStorage.setItem('learis_cpf', cpf); } catch (e) {}
         valorEl.textContent = formatarReal(r.dados.valor);
 
         if (r.dados.qr_code_base64) {
@@ -148,12 +169,6 @@
         } else {
           document.querySelector('.copia').classList.add('escondido');
         }
-        if (r.dados.ticket_url) {
-          linkBanco.href = r.dados.ticket_url;
-        } else {
-          linkBanco.classList.add('escondido');
-        }
-
         etapaGerar.classList.add('escondido');
         etapaPix.classList.remove('escondido');
         statusEl.textContent = 'Aguardando confirmacao...';
@@ -208,6 +223,11 @@
           return;
         }
         saudacao.textContent = 'Ola, ' + (u.nome || '').split(' ')[0] + '! Falta so o pagamento para liberar as aulas.';
+
+        try {
+          const cpfSalvo = localStorage.getItem('learis_cpf');
+          if (cpfSalvo) cpfInput.value = mascaraCpf(cpfSalvo);
+        } catch (e) {}
 
         const cfg = await api('/api/config');
         const valor = (cfg.ok && cfg.dados.valor) || (window.CONFIG_SITE && window.CONFIG_SITE.valorAcesso) || 16.9;

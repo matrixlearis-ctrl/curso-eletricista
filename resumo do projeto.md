@@ -1,11 +1,12 @@
 # Resumo do Projeto — Curso de Eletricista (`https://learis.com.br`)
 
-Ultima atualizacao: 18/11/2026 (modernizacao visual da pagina inicial, banner e preco R$ 16,90)
+Ultima atualizacao: 18/11/2026 (modernizacao visual da pagina inicial, banner e preco R$ 16,90) — migração de pagamento para **PagBank** em andamento
 
 ## 1. Objetivo
 Curso de Eletricista no dominio `https://learis.com.br`, com sistema **no modelo do LotoBot**:
-cadastro/login proprio, confirmacao de e-mail, recuperacao de senha, pagamento **Pix (Mercado Pago)**
+cadastro/login proprio, confirmacao de e-mail, recuperacao de senha, pagamento **Pix via PagBank**
 com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo, priorizando celular.
+O Mercado Pago foi removido do codigo; ele so aparece neste documento em registros historicos de testes.
 
 - **Preco:** R$ 16,90 (`VALOR_ACESSO=16.9`) — alterado de R$ 19,90 em 18/11/2026
 - **Banco:** Supabase (Postgres na nuvem)
@@ -66,14 +67,14 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
   - `POST /api/auth/reenviar-confirmacao`
   - `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
   - `POST /api/auth/solicitar-recuperacao`, `POST /api/auth/redefinir-senha`
-- Pagamento:
-  - `POST /api/pagamento/pix` — cria cobranca Pix no Mercado Pago (QR + copia e cola)
-  - `POST /api/pagamento/status` — consulta o MP e libera se aprovado
-  - `POST /api/mercadopago/webhook` — **sempre** confirma na API do MP antes de liberar; idempotente por `mp_id`
+- Pagamento (somente PagBank):
+  - `POST /api/pagamento/pix` — `POST /orders` com PIX (QR + copia e cola), usando CPF informado pelo aluno
+  - `POST /api/pagamento/status` — consulta `GET /charges/{id}` e libera se `PAID`
+  - `POST /api/pagbank/webhook` — valida assinatura SHA256, confirma a cobranca na API e libera; idempotente pela coluna `mp_id` (`CHAR_...`)
   - `POST /api/pagamento/simular` — **somente** com `ALLOW_DEV_PAYMENT=1` e fora de producao
 - Infra:
-  - `GET /api/config` — valor, descricao, `devPayment`, qual banco esta ativo
-  - `GET /api/health` — banco, Supabase, Mercado Pago, e-mail e `tabelas: ok`
+  - `GET /api/config` — valor, descricao, `devPayment`, `pagamento: 'pagbank'`, qual banco esta ativo
+  - `GET /api/health` — banco, Supabase, `pagBank`, `pagBankAmbiente`, e-mail e `tabelas: ok`
 - E-mails (Resend): confirmacao de cadastro, redefinicao de senha e "acesso liberado".
   Sem `RESEND_API_KEY`, o link aparece no console do servidor e na propria tela (`linkDev`, fora de producao).
 - Protecao da area de aulas: `/aulas` (`/aulas.html`, `/area-do-aluno`) exige login **e** `liberado`;
@@ -87,7 +88,7 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | `cadastro.html` | criar conta (+ reenviar confirmacao; em modo local mostra o botao "Confirmar meu e-mail agora") |
 | `confirmar-email.html` | valida o link do e-mail |
 | `recuperar-senha.html` / `redefinir-senha.html` | fluxo de nova senha |
-| `pagamento.html` | valor (R$ 16,90), QR Code, copia e cola, "Ja paguei" (verifica a cada 5s), modo local |
+| `pagamento.html` | valor (R$ 16,90), campo CPF, QR Code, copia e cola, "Ja paguei" (verifica a cada 5s), modo local |
 | `404.html` | pagina nao encontrada |
 | `auth.js` | helpers de sessao/fetch |
 | `config-site.js` | config publica de reserva (valor 16.9, textos de suporte) |
@@ -135,13 +136,13 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | Repo conectado | `matrixlearis-ctrl/curso-eletricista`, branch `main`, deploy automatico |
 | DNS HostGator | A `@` → `76.76.21.21`; CNAME `www` → `cname.vercel-dns.com` |
 | HTTPS | certificado emitido e valido nos dois dominios |
-| Variaveis | 10 preenchidas (Supabase, valor 16.9, NODE_ENV=production, MP, Resend, etc.) |
-| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix real de R$ 19,90 (teste historico); e-mail entregue |
+| Variaveis | Supabase, valor 16.9, NODE_ENV=production, Resend, etc.; `MP_ACCESS_TOKEN` removida e `PAGBANK_TOKEN` pendente de configuracao |
+| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix de R$ 19,90 no MP (teste historico); e-mail entregue |
 
-Todas as variaveis estao preenchidas na Vercel. Em 17/11/2026 foram configurados:
-`MP_ACCESS_TOKEN` (token de producao da conta MP usada no LotoBot, validado via `GET /users/me`)
-e `RESEND_API_KEY` (chave do Resend do LotoBot, validada com envio real).
-`/api/health` retorna `mercadoPago: true` e `email: true`.
+Em 17/11/2026 foram configurados `MP_ACCESS_TOKEN` (hoje removido) e `RESEND_API_KEY`
+(chave do Resend do LotoBot, validada com envio real). Apos a migracao, `/api/health`
+passa a reportar `pagBank: true` somente quando `PAGBANK_TOKEN` estiver preenchido na Vercel.
+O codigo PagBank-only ainda nao foi publicado: o push depende do token para nao deixar o site sem pagamento.
 Dominio `learis.com.br` verificado no Resend em 17/11/2026 (DKIM, MX, TXT e CNAME conferidos
 no DNS e validados pela API). Remetente final: `Curso de Eletricista <no-reply@learis.com.br>`,
 com envio real confirmado (`de=no-reply@learis.com.br`, `last_event: delivered`).
@@ -151,6 +152,14 @@ com envio real confirmado (`de=no-reply@learis.com.br`, `last_event: delivered`)
 do servidor, o `.env`, o `.env.example`, `public/config-site.js` e o fallback de `pagamento.html`
 foram atualizados para `16.9`. A variavel da Vercel tambem foi alterada e o projeto redeployado.
 Os testes de Pix anteriores (R$ 19,90) permanecem no documento apenas como registro historico.
+
+**Migracao para PagBank (18/11/2026):** codigo preparado para ser o unico meio de pagamento:
+`POST /orders` com PIX, CPF do pagador, valor em centavos, `notification_urls` apontando para
+`/api/pagbank/webhook`, validacao SHA256 da assinatura, consulta `GET /charges/{id}` antes de
+liberar e resposta compativel com o front (`chargeId`, `qr_code`, `qr_code_base64`).
+A coluna `pagamentos.mp_id` continua armazenando o id da cobranca (agora `CHAR_...`) para evitar
+migracao de schema. `MP_ACCESS_TOKEN` saiu do codigo, do `.env` e dos documentos.
+O deploy ainda nao foi feito porque depende do `PAGBANK_TOKEN` (sandbox para validar e producao para o ar).
 
 Arquivos criados para o deploy:
 
@@ -168,16 +177,17 @@ Passos para publicar:
 3. Cadastrar as variaveis de ambiente (secao 8)
 4. **Deploy** → testar na URL `*.vercel.app`
 5. **Settings → Domains** → `learis.com.br` + `www.learis.com.br` e criar os DNS indicados
-6. Mercado Pago → webhook `https://learis.com.br/api/mercadopago/webhook`
-   (o backend envia essa URL em `notification_url` a cada cobranca; opcionalmente cadastre
-   tambem no painel da aplicacao MP em *Webhooks*)
+6. PagBank → gerar token em **Vendas → Integrações → Gerar Token** e definir
+   `PAGBANK_TOKEN` + `PAGBANK_ENV=production`. O backend envia
+   `notification_urls: ["https://learis.com.br/api/pagbank/webhook"]` em cada pedido;
+   nao e necessario cadastrar webhook no painel.
 
 Observacoes:
 
 - Nao existe disco local: por isso o banco e o Supabase (nada de `data/app.db`)
 - Funcao Hobby tem ~10s por requisicao — suficiente para este app
 - Regiao padrao `iad1`; se o Supabase estiver no Brasil, adicionar `"regions": ["gru1"]` no `vercel.json`
-- Em producao **nao existe** botao de simulacao: para testar o fluxo pago e preciso o `MP_ACCESS_TOKEN` real
+- Em producao **nao existe** botao de simulacao: para testar o fluxo pago e preciso o `PAGBANK_TOKEN` real
 - O empacotamento de `public/` e a parte mais sensivel: se alguma pagina der 404 apos o deploy, revisar o `vercel.json`
 
 ## 7. Repositorio GitHub
@@ -212,7 +222,9 @@ Modelo em `.env.example`; local em `.env` (nao versionado); producao no painel d
 | `VALOR_ACESSO` | `16.9` |
 | `DESCRICAO_PAGAMENTO` | `Curso de Eletricista - Acesso completo` |
 | `SESSAO_DIAS` | `30` |
-| `MP_ACCESS_TOKEN` | token do Mercado Pago (Pix) |
+| `PAGBANK_TOKEN` | token da API PagBank (unico meio de pagamento) |
+| `PAGBANK_ENV` | `sandbox` local / `production` producao |
+| `PAGBANK_WEBHOOK_URL` | opcional; padrao `PUBLIC_BASE_URL/api/pagbank/webhook` |
 | `RESEND_API_KEY` | chave do Resend (opcional em dev) |
 | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
 | `NODE_ENV` | `development` local / `production` producao |
@@ -228,8 +240,10 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 
 - `iniciar.bat`: instala dependencias se faltar, avisa se o Node nao existe, e se a porta 3000
   ja estiver em uso apenas abre o navegador (nao abre servidor duplicado)
-- Testes sem Mercado Pago: `.env` com `ALLOW_DEV_PAYMENT=1` → botao
+- Testes sem criar cobranca real: `.env` com `ALLOW_DEV_PAYMENT=1` → botao
   "Simular pagamento (modo local)" na pagina de pagamento
+- Para testar o Pix real em sandbox: `PAGBANK_ENV=sandbox` + token do Portal do Desenvolvedor;
+  a conta precisa ter uma chave Pix ativa
 
 ## 10. Testes realizados
 
@@ -273,9 +287,10 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Producao (Vercel + `learis.com.br`)**: `/api/health` e `/api/config` OK; cadastro → login →
   `/aulas` entregou as 30 aulas, Aula 28 e Aula 30 corretas; sem cookie `/aulas` redireciona (302);
   DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
-- **Pix real em producao**: `/api/health` com `mercadoPago: true`; conta de teste gerou cobranca
-  de R$ 19,90 no MP (`status: pending`, `mpId`, QR Code e `ticket_url`), conta removida depois;
-  endpoint do webhook respondeu `200 {"received":true}` (teste historico, feito com o preco antigo)
+- **Pix real em producao (HISTORICO — Mercado Pago, preco antigo)**: `/api/health` com
+  `mercadoPago: true`; conta de teste gerou cobranca de R$ 19,90 no MP (`status: pending`,
+  `mpId`, QR Code e `ticket_url`), conta removida depois; endpoint antigo respondeu
+  `200 {"received":true}`. Esse provedor nao e mais usado; o teste equivalente com PagBank esta pendente.
 - **E-mail real em producao**: `/api/health` com `email: true`; teste pelo proprio site gerou o token
   de confirmacao, o Resend registrou o envio com `last_event: delivered`, e a conta de teste foi removida
 
@@ -285,21 +300,22 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - Sessoes: token aleatorio de 32 bytes, so o hash SHA-256 fica no banco
 - Cookie `HttpOnly` + `SameSite=Lax`; `Secure` automatico quando `PUBLIC_BASE_URL` e HTTPS
 - `private/aulas.html` fora de `public/`: acesso so pela rota `/aulas` com login + liberacao
-- Webhook do Mercado Pago nunca confia no corpo: consulta `GET /v1/payments/{id}` antes de liberar
+- Webhook do PagBank valida `x-authenticity-token` (`SHA256(token + "-" + corpo)`) e confirma
+  `GET /charges/{id}` antes de liberar; so aceita `PAID` e `reference_id` do aluno
 - RLS no Supabase sem politicas (apenas `service_role`)
 - Limite de tentativas por IP nas rotas `/api/*`
 - **Segredos que passaram por conversa e devem ser rotacionados:**
   - `SUPABASE_SERVICE_ROLE_KEY` (colar no `.env`/Vercel e apagar a antiga no painel)
   - Token do GitHub (`github_pat_...`) — revogar em Settings > Developer settings
   - Token da Vercel (`vcp_...`) — revogar em Vercel > Settings > Tokens
-  - `MP_ACCESS_TOKEN` — gerar um novo no painel do Mercado Pago e atualizar `.env`/Vercel
-    (o valor atual tambem apareceu em conversa e na doc do LotoBot)
+  - `MP_ACCESS_TOKEN` — revogar no Mercado Pago (nao e mais usado; o valor apareceu em conversa/doc)
+  - `PAGBANK_TOKEN` — nunca compartilhar; se aparecer em conversa, gerar outro no painel PagBank
   - `RESEND_API_KEY` — criar nova chave no Resend e revogar a antiga (tambem divulgada em conversa/doc)
 
 ## 12. Pendencias
 
-1. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
-2. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
+1. **Token PagBank**: obter token de sandbox, testar Order Pix + webhook assinado; depois gerar token de producao e configurar na Vercel antes de fazer push
+2. **Rotacionar os segredos** listados na secao 11 (Vercel, GitHub, Supabase, Resend e o antigo token MP)
 3. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
 4. Opcional: pagina de vendas publica (o painel do aluno com progresso e marcacao ja esta pronto)
 
@@ -318,8 +334,9 @@ no proprio painel):
 - [x] `/api/auth/cadastro` cria usuario e o e-mail de confirmacao e entregue (teste real no Resend)
 - [ ] Link de confirmacao abre `/confirmar-email.html` e confirma
 - [ ] Login leva para `/pagamento.html` (usuario sem pagamento)
-- [x] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90 (teste real historico em producao, com o preco antigo)
-- [ ] Webhook aprova e libera o usuario automaticamente
+- [x] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90 (teste historico com Mercado Pago e preco antigo)
+- [ ] `/api/pagamento/pix` retorna QR Code, copia e cola e `chargeId` via PagBank (R$ 16,90)
+- [ ] Webhook assinado do PagBank aprova e libera o usuario automaticamente
 - [x] `/aulas` abre com as 30 aulas so para aluno liberado (validado em producao)
 - [ ] E-mail "acesso liberado" chega ao aluno
 - [x] Layout conferido no celular (viewport 390x844, sem overflow; menu lateral e cards testados)

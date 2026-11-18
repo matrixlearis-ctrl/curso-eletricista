@@ -53,6 +53,7 @@ create index if not exists idx_email_tokens_user on public.email_tokens (user_id
 create table if not exists public.pagamentos (
   id        uuid primary key default gen_random_uuid(),
   user_id   uuid not null references public.usuarios(id) on delete cascade,
+  -- mp_id guarda o id da cobranca PagBank (CHAR_...). Nome mantido por compatibilidade.
   mp_id     text unique,
   valor     numeric(10, 2) not null,
   status    text not null,
@@ -61,6 +62,7 @@ create table if not exists public.pagamentos (
 );
 
 create index if not exists idx_pagamentos_user on public.pagamentos (user_id);
+-- Indice da cobranca (PagBank CHAR_...).
 create index if not exists idx_pagamentos_mp on public.pagamentos (mp_id);
 
 -- ------------------------------------------------------------ seguranca

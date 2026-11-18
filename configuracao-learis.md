@@ -1,6 +1,6 @@
 # Configuracao para o dominio learis.com.br
 
-Sistema: Node.js + Express + **Supabase (Postgres)** + Mercado Pago (Pix) + Resend.
+Sistema: Node.js + Express + **Supabase (Postgres)** + PagBank (Pix) + Resend.
 As tabelas ficam no projeto Supabase `https://vvsyquozzttiivgsswfz.supabase.co` e sao criadas por `supabase/schema.sql`.
 
 ## 1. Variaveis de ambiente (producao)
@@ -12,7 +12,9 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 | `SUPABASE_URL` | `https://vvsyquozzttiivgsswfz.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave secreta do servidor (Settings > API Keys > service_role) |
 | `PUBLIC_BASE_URL` | `https://learis.com.br` |
-| `MP_ACCESS_TOKEN` | Access Token do Mercado Pago (producao) |
+| `PAGBANK_TOKEN` | token da API PagBank (producao) |
+| `PAGBANK_ENV` | `production` (use `sandbox` apenas nos testes) |
+| `PAGBANK_WEBHOOK_URL` | opcional; padrao `https://learis.com.br/api/pagbank/webhook` |
 | `RESEND_API_KEY` | chave da API do Resend |
 | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
 | `VALOR_ACESSO` | `16.9` (R$ 16,90) |
@@ -30,15 +32,22 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 - `descricaoPagamento`: descricao da cobranca
 - `suporteWhatsapp` / `emailSuporte`: opcionais, para contato
 
-## 3. Mercado Pago (Pix)
+## 3. PagBank (Pix) — unico meio de pagamento
 
-- **Webhook**: `https://learis.com.br/api/mercadopago/webhook`
-  - Gerado automaticamente a partir de `PUBLIC_BASE_URL` ao criar a cobranca.
-  - Aceita notificacoes `payment` (JSON) e tambem `?type=payment&data.id=...`.
-- O backend **sempre consulta** `GET /v1/payments/{id}` antes de liberar o aluno (nao confia apenas no corpo do webhook).
-- A liberacao e idempotente (tabela `pagamentos`, `mp_id` unico).
-- O dominio precisa estar publico com **HTTPS** para receber as notificacoes.
-- Se a mesma conta Mercado Pago atender mais de um projeto, confira se cada webhook aponta para o projeto correto (`external_reference` = id do usuario do curso).
+- **Webhook**: `https://learis.com.br/api/pagbank/webhook`
+  - Enviado automaticamente como `notification_urls` em cada `POST /orders`.
+  - O dominio precisa estar publico com **HTTPS**.
+- O aluno informa o **CPF** na pagina de pagamento; o backend envia `customer.tax_id` (obrigatorio na API PagBank).
+- `POST /orders` cria uma cobranca PIX de `VALOR_ACESSO` em centavos (`1690` = R$ 16,90),
+  com `reference_id` = id do usuario. O QR Code vem em `charges[0].qr_code.text`
+  e a imagem e buscada pelo link `QRCODE.BASE64`.
+- O webhook valida a assinatura `x-authenticity-token` = `SHA256(token + "-" + corpo_bruto)`
+  e filtra apenas `x-product-origin: ORDER` / `x-product-id: ORDE_...`.
+- Antes de liberar, o backend consulta `GET /charges/{id}` e exige `status === "PAID"`
+  e `reference_id` igual ao usuario da sessao.
+- A liberacao e idempotente (tabela `pagamentos`, coluna `mp_id` reaproveitada para o `CHAR_...`).
+- O QR Code e de uso unico e expira em `PAGBANK_EXPIRACAO_MINUTOS` (padrao 30).
+- `PAGBANK_ENV=sandbox` usa `https://sandbox.api.pagseguro.com`; producao usa `https://api.pagseguro.com`.
 
 ## 4. E-mails (Resend)
 
@@ -66,7 +75,7 @@ Passos:
 3. Cadastrar as variaveis da secao 1 em **Environment Variables** (sem `ALLOW_DEV_PAYMENT`)
 4. **Deploy** → testar na URL `*.vercel.app`
 5. **Settings → Domains** → adicionar `learis.com.br` e `www.learis.com.br` e criar os DNS indicados
-6. Cadastrar o webhook do Mercado Pago com o dominio final
+6. Gerar o token de producao no PagBank (**Vendas → Integrações → Gerar Token**) e definir `PAGBANK_TOKEN` + `PAGBANK_ENV=production` na Vercel
 
 Observacoes:
 
@@ -78,7 +87,8 @@ Observacoes:
 
 ## 6. Seguranca
 
-- `MP_ACCESS_TOKEN` configurado em 17/11/2026 (token de producao `APP_USR-...`, o mesmo da conta do LotoBot), validado com `GET /users/me` e com geracao real de Pix. Como o valor apareceu em conversa, **gere outro e troque em `.env` + Vercel** quando possivel.
+- `PAGBANK_TOKEN` deve ser gerado no painel PagBank e ficar **somente** em `.env`/Vercel. Tokens antigos do Mercado Pago nao sao mais usados e devem ser revogados.
+- Webhook validado por SHA256 com o proprio token; eventos sem assinatura valida sao descartados.
 - Senhas sao armazenadas com `scrypt` + salt (nunca em texto puro).
 - Sessao em cookie `HttpOnly` (`learis_sessao`), validade de 30 dias, `Secure` automatico quando `PUBLIC_BASE_URL` e HTTPS.
 - `private/aulas.html` fica fora da pasta publica: o acesso so acontece pela rota `/aulas`, que exige login + liberacao.
@@ -89,8 +99,8 @@ Observacoes:
 - [ ] `/api/auth/cadastro` cria usuario e envia e-mail
 - [ ] Link de confirmacao abre `/confirmar-email.html` e confirma
 - [ ] Login cria sessao e leva para `/pagamento.html`
-- [ ] `/api/pagamento/pix` retorna QR Code e `mpId`
-- [ ] Webhook aprova e libera o usuario
+- [ ] `/api/pagamento/pix` retorna QR Code e `chargeId`
+- [ ] Webhook assinado aprova e libera o usuario
 - [ ] `/aulas` abre somente para aluno liberado (e redireciona os demais)
 - [ ] E-mail "acesso liberado" chega ao aluno
 - [ ] Layout conferido no celular (a maioria dos alunos assiste pelo telefone)

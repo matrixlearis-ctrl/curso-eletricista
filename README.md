@@ -1,6 +1,6 @@
 # Curso de Eletricista — learis.com.br
 
-Area de aulas com login proprio e pagamento Pix (Mercado Pago), no modelo do LotoBot.
+Area de aulas com login proprio e pagamento Pix via **PagBank**, no modelo do LotoBot.
 Banco de dados: **Supabase** (Postgres).
 
 ## Configuracao inicial (uma vez)
@@ -48,7 +48,7 @@ Acesse `http://localhost:3000`. A janela preta precisa ficar aberta: ela e o ser
 ```
 api/index.js                 Entrada da Vercel (exporta o app; nao abre porta)
 vercel.json                  Configuracao de deploy na Vercel
-server.js                    Backend (Express + Supabase + Mercado Pago + Resend)
+server.js                    Backend (Express + Supabase + PagBank + Resend)
 supabase/schema.sql          Tabelas que devem ser criadas no Supabase
 verificar-supabase.js        Testa a conexao com o Supabase
 conferir-dados.js            Mostra quantas contas/pagamentos existem no Supabase
@@ -63,7 +63,9 @@ data/app.db                  Banco SQLite antigo (backup, nao e mais usado)
 - `SUPABASE_URL` — `https://vvsyquozzttiivgsswfz.supabase.co`
 - `SUPABASE_SERVICE_ROLE_KEY` — chave secreta do servidor
 - `PUBLIC_BASE_URL` — `http://localhost:3000` local, `https://learis.com.br` em producao
-- `MP_ACCESS_TOKEN` — Access Token do Mercado Pago (Pix)
+- `PAGBANK_TOKEN` — token da API PagBank (unico meio de pagamento)
+- `PAGBANK_ENV` — `sandbox` para testes, `production` para cobrancas reais
+- `PAGBANK_WEBHOOK_URL` — opcional; por padrao usa `PUBLIC_BASE_URL/api/pagbank/webhook`
 - `RESEND_API_KEY` — envio de e-mails (sem ela, os links aparecem no console e na tela)
 - `EMAIL_FROM` — remetente; use um dominio **verificado no Resend** (ex.: `Curso de Eletricista <no-reply@learis.com.br>`)
 - `VALOR_ACESSO` — preco do curso (padrao 16.9 = R$ 16,90)
@@ -71,7 +73,7 @@ data/app.db                  Banco SQLite antigo (backup, nao e mais usado)
 
 **Nunca** coloque o `.env` em repositorio ou em pasta publica.
 
-## Modo local (sem Mercado Pago)
+## Modo local (sem criar cobranca real)
 
 Com `ALLOW_DEV_PAYMENT=1` e `NODE_ENV=development`, a pagina de pagamento mostra
 o botao **Simular pagamento (modo local)**, que libera o acesso para testar as aulas.
@@ -101,7 +103,9 @@ Passo a passo:
    | `SUPABASE_URL` | `https://vvsyquozzttiivgsswfz.supabase.co` |
    | `SUPABASE_SERVICE_ROLE_KEY` | chave secreta do Supabase |
    | `PUBLIC_BASE_URL` | `https://learis.com.br` |
-   | `MP_ACCESS_TOKEN` | token do Mercado Pago |
+   | `PAGBANK_TOKEN` | token da API PagBank (sandbox ou producao) |
+   | `PAGBANK_ENV` | `sandbox` nos testes, `production` no ar |
+   | `PAGBANK_WEBHOOK_URL` | `https://learis.com.br/api/pagbank/webhook` |
    | `RESEND_API_KEY` | chave do Resend |
    | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
    | `VALOR_ACESSO` | `16.9` |
@@ -112,9 +116,10 @@ Passo a passo:
 4. Clique em **Deploy**. O site sai em `https://curso-eletricista.vercel.app`
 5. Em **Settings → Domains**, adicione `learis.com.br` e `www.learis.com.br`
    e crie os registros DNS que a Vercel mostrar (A / CNAME)
-6. No Mercado Pago, configure o webhook `https://learis.com.br/api/mercadopago/webhook`
-   (o backend ja envia essa URL como `notification_url` em cada cobranca; o cadastro no painel
-   da aplicacao MP e opcional)
+6. No PagBank, gere o token de producao em **Vendas → Integrações → Gerar Token** e
+   cadastre `PAGBANK_TOKEN` na Vercel. O backend envia
+   `notification_urls: ["https://learis.com.br/api/pagbank/webhook"]` em cada pedido;
+   nao e preciso cadastrar o webhook no painel. A conta precisa ter uma chave Pix ativa.
 
 ### Observacoes da Vercel
 
@@ -132,4 +137,4 @@ Passo a passo:
 3. Configurar as variaveis de ambiente no painel
 4. Iniciar com `npm start` (ou PM2)
 5. Apontar `learis.com.br` para o servidor e ativar HTTPS
-6. Cadastrar o webhook `https://learis.com.br/api/mercadopago/webhook` no Mercado Pago
+6. Definir `PAGBANK_ENV=production` e `PAGBANK_TOKEN` com o token de producao
