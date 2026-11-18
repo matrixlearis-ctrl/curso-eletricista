@@ -36,7 +36,8 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 
 - **Webhook**: `https://learis.com.br/api/pagbank/webhook`
   - Enviado automaticamente como `notification_urls` em cada `POST /orders`.
-  - O dominio precisa estar publico com **HTTPS**.
+  - O dominio precisa estar publico com **HTTPS**. O PagBank recusa `http://localhost...`;
+    em testes locais use um tunel HTTPS ou defina `PAGBANK_WEBHOOK_URL` com uma URL publica.
 - O aluno informa o **CPF** na pagina de pagamento; o backend envia `customer.tax_id` (obrigatorio na API PagBank).
 - `POST /orders` cria uma cobranca PIX de `VALOR_ACESSO` em centavos (`1690` = R$ 16,90),
   com `reference_id` = id do usuario. O QR Code vem em `charges[0].qr_code.text`

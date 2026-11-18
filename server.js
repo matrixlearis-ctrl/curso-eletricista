@@ -388,7 +388,8 @@ function htmlLiberado(link, nome) {
 
 // ---------------------------------------------------------------- pagamento (PagBank)
 function pagbankHeaders() {
-  return { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${PAGBANK_TOKEN}` };
+  // O PagBank responde 406 em GET /charges quando recebe Accept: application/json.
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${PAGBANK_TOKEN}` };
 }
 
 function pagbankErro(dados, status) {
@@ -432,6 +433,9 @@ async function pagbankImagemQr(charge) {
 }
 
 async function pagbankCriarPix({ userId, nome, email, cpf, valor, descricao }) {
+  if (!/^https:\/\//i.test(PAGBANK_WEBHOOK_URL)) {
+    throw new Error('PAGBANK_WEBHOOK_URL precisa ser uma URL HTTPS publica (ex.: https://learis.com.br/api/pagbank/webhook).');
+  }
   const valorCentavos = Math.round(Number(valor) * 100);
   if (!(valorCentavos > 0)) throw new Error('Valor invalido para gerar o Pix.');
   const expiraEm = new Date(Date.now() + PAGBANK_EXPIRACAO_MINUTOS * 60000).toISOString();
