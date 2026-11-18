@@ -66,7 +66,7 @@ data/app.db                  Banco SQLite antigo (backup, nao e mais usado)
 - `MP_ACCESS_TOKEN` — Access Token do Mercado Pago (Pix)
 - `RESEND_API_KEY` — envio de e-mails (sem ela, os links aparecem no console e na tela)
 - `EMAIL_FROM` — remetente; use um dominio **verificado no Resend** (ex.: `Curso de Eletricista <no-reply@learis.com.br>`)
-- `VALOR_ACESSO` — preco do curso (padrao 19.9 = R$ 19,90)
+- `VALOR_ACESSO` — preco do curso (padrao 16.9 = R$ 16,90)
 - `ALLOW_DEV_PAYMENT=1` — mostra o botao "Simular pagamento" apenas fora de producao
 
 **Nunca** coloque o `.env` em repositorio ou em pasta publica.
@@ -104,7 +104,7 @@ Passo a passo:
    | `MP_ACCESS_TOKEN` | token do Mercado Pago |
    | `RESEND_API_KEY` | chave do Resend |
    | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
-   | `VALOR_ACESSO` | `19.9` |
+   | `VALOR_ACESSO` | `16.9` |
    | `NODE_ENV` | `production` |
 
    **Nao** defina `ALLOW_DEV_PAYMENT` (o botao de simulacao nunca aparece em producao).

@@ -15,7 +15,7 @@ Defina no painel do servidor/hospedagem. **Nunca salve valores secretos em arqui
 | `MP_ACCESS_TOKEN` | Access Token do Mercado Pago (producao) |
 | `RESEND_API_KEY` | chave da API do Resend |
 | `EMAIL_FROM` | `Curso de Eletricista <no-reply@learis.com.br>` |
-| `VALOR_ACESSO` | `19.9` (R$ 19,90) |
+| `VALOR_ACESSO` | `16.9` (R$ 16,90) |
 | `DESCRICAO_PAGAMENTO` | `Curso de Eletricista - Acesso completo` |
 | `SESSAO_DIAS` | `30` |
 | `NODE_ENV` | `production` |

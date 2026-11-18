@@ -1,13 +1,13 @@
 # Resumo do Projeto — Curso de Eletricista (`https://learis.com.br`)
 
-Ultima atualizacao: 17/11/2026 (inclui modernizacao visual da pagina inicial e banner)
+Ultima atualizacao: 18/11/2026 (modernizacao visual da pagina inicial, banner e preco R$ 16,90)
 
 ## 1. Objetivo
 Curso de Eletricista no dominio `https://learis.com.br`, com sistema **no modelo do LotoBot**:
 cadastro/login proprio, confirmacao de e-mail, recuperacao de senha, pagamento **Pix (Mercado Pago)**
 com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo, priorizando celular.
 
-- **Preco:** R$ 19,90 (`VALOR_ACESSO=19.9`)
+- **Preco:** R$ 16,90 (`VALOR_ACESSO=16.9`) — alterado de R$ 19,90 em 18/11/2026
 - **Banco:** Supabase (Postgres na nuvem)
 - **Deploy:** Vercel (serverless)
 - **Repositorio:** `https://github.com/matrixlearis-ctrl/curso-eletricista`
@@ -87,10 +87,10 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | `cadastro.html` | criar conta (+ reenviar confirmacao; em modo local mostra o botao "Confirmar meu e-mail agora") |
 | `confirmar-email.html` | valida o link do e-mail |
 | `recuperar-senha.html` / `redefinir-senha.html` | fluxo de nova senha |
-| `pagamento.html` | valor (R$ 19,90), QR Code, copia e cola, "Ja paguei" (verifica a cada 5s), modo local |
+| `pagamento.html` | valor (R$ 16,90), QR Code, copia e cola, "Ja paguei" (verifica a cada 5s), modo local |
 | `404.html` | pagina nao encontrada |
 | `auth.js` | helpers de sessao/fetch |
-| `config-site.js` | config publica de reserva (valor 19.9, textos de suporte) |
+| `config-site.js` | config publica de reserva (valor 16.9, textos de suporte) |
 | `css/estilo.css` | estilos compartilhados (mantidos originalmente) |
 | `css/entrada.css` | estilos exclusivos da pagina inicial (energia/neon) |
 | `js/energia.js` | cria as particulas do fundo da index (sem bibliotecas) |
@@ -135,8 +135,8 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | Repo conectado | `matrixlearis-ctrl/curso-eletricista`, branch `main`, deploy automatico |
 | DNS HostGator | A `@` → `76.76.21.21`; CNAME `www` → `cname.vercel-dns.com` |
 | HTTPS | certificado emitido e valido nos dois dominios |
-| Variaveis | 10 preenchidas (Supabase, valor 19.9, NODE_ENV=production, MP, Resend, etc.) |
-| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix real R$ 19,90; e-mail entregue |
+| Variaveis | 10 preenchidas (Supabase, valor 16.9, NODE_ENV=production, MP, Resend, etc.) |
+| Teste em producao | cadastro → login → `/aulas` (30 aulas) OK; Pix real de R$ 19,90 (teste historico); e-mail entregue |
 
 Todas as variaveis estao preenchidas na Vercel. Em 17/11/2026 foram configurados:
 `MP_ACCESS_TOKEN` (token de producao da conta MP usada no LotoBot, validado via `GET /users/me`)
@@ -145,6 +145,12 @@ e `RESEND_API_KEY` (chave do Resend do LotoBot, validada com envio real).
 Dominio `learis.com.br` verificado no Resend em 17/11/2026 (DKIM, MX, TXT e CNAME conferidos
 no DNS e validados pela API). Remetente final: `Curso de Eletricista <no-reply@learis.com.br>`,
 com envio real confirmado (`de=no-reply@learis.com.br`, `last_event: delivered`).
+
+**Mudanca de preco em 18/11/2026:** R$ 19,90 → **R$ 16,90**. O valor e definido pela variavel
+`VALOR_ACESSO` (fonte unica, usada por `/api/config` e pela criacao da cobranca Pix); o fallback
+do servidor, o `.env`, o `.env.example`, `public/config-site.js` e o fallback de `pagamento.html`
+foram atualizados para `16.9`. A variavel da Vercel tambem foi alterada e o projeto redeployado.
+Os testes de Pix anteriores (R$ 19,90) permanecem no documento apenas como registro historico.
 
 Arquivos criados para o deploy:
 
@@ -200,7 +206,7 @@ Modelo em `.env.example`; local em `.env` (nao versionado); producao no painel d
 | `SUPABASE_URL` | `https://vvsyquozzttiivgsswfz.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave secreta do Supabase (Settings > API Keys) |
 | `PUBLIC_BASE_URL` | `http://localhost:3000` local / `https://learis.com.br` producao |
-| `VALOR_ACESSO` | `19.9` |
+| `VALOR_ACESSO` | `16.9` |
 | `DESCRICAO_PAGAMENTO` | `Curso de Eletricista - Acesso completo` |
 | `SESSAO_DIAS` | `30` |
 | `MP_ACCESS_TOKEN` | token do Mercado Pago (Pix) |
@@ -232,7 +238,7 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   `/api/auth/me` → `/aulas` bloqueado (302 para `/pagamento.html`) → pagamento simulado →
   `/aulas` 200 com **30 aulas** → logout → `/aulas` volta a bloquear
 - **Aula 28**: confirmado que a pagina usa `JyQPFWzNz5Y` e nao repete a Aula 24
-- **Preco**: `/api/config` retorna `valor: 19.9` (exibido como R$ 19,90)
+- **Preco**: `/api/config` retorna `valor: 16.9` (exibido como R$ 16,90)
 - **Serverless**: `require('./api/index.js')` devolve a funcao do Express sem abrir porta
 - **Pagina de aulas em HTTP** (`localhost`): 30 cards, sem erros no console
   → o erro 153 do YouTube era causado por abrir via `file://`
@@ -266,7 +272,7 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
 - **Pix real em producao**: `/api/health` com `mercadoPago: true`; conta de teste gerou cobranca
   de R$ 19,90 no MP (`status: pending`, `mpId`, QR Code e `ticket_url`), conta removida depois;
-  endpoint do webhook respondeu `200 {"received":true}`
+  endpoint do webhook respondeu `200 {"received":true}` (teste historico, feito com o preco antigo)
 - **E-mail real em producao**: `/api/health` com `email: true`; teste pelo proprio site gerou o token
   de confirmacao, o Resend registrou o envio com `last_event: delivered`, e a conta de teste foi removida
 
@@ -309,7 +315,7 @@ no proprio painel):
 - [x] `/api/auth/cadastro` cria usuario e o e-mail de confirmacao e entregue (teste real no Resend)
 - [ ] Link de confirmacao abre `/confirmar-email.html` e confirma
 - [ ] Login leva para `/pagamento.html` (usuario sem pagamento)
-- [x] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90 (teste real em producao)
+- [x] `/api/pagamento/pix` retorna QR Code, copia e cola e `mpId` de R$ 19,90 (teste real historico em producao, com o preco antigo)
 - [ ] Webhook aprova e libera o usuario automaticamente
 - [x] `/aulas` abre com as 30 aulas so para aluno liberado (validado em producao)
 - [ ] E-mail "acesso liberado" chega ao aluno
@@ -319,3 +325,4 @@ no proprio painel):
 - [x] Botao "Criar conta" verde claro abaixo de Entrar, linkando para `/cadastro.html`
 - [x] Login da index preservado: campos vazios, senha errada e login valido redirecionando para `/aulas`
 - [x] Outras paginas inalteradas pelo visual novo (estilo verde original conferido)
+- [x] Preco atualizado para R$ 16,90 em todo o projeto e na Vercel (`/api/config` → `valor: 16.9`)
