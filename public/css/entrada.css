@@ -394,6 +394,17 @@ a { color: var(--sky); }
   background: linear-gradient(90deg, transparent, rgba(95, 216, 255, .5), transparent);
 }
 
+/* banner abaixo do rodape */
+.banner-login {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 18px 0 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(95, 216, 255, .22);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .45), 0 0 26px rgba(47, 155, 255, .12);
+}
+
 /* ------------------------------------------------------------------ */
 /* responsividade                                                      */
 /* ------------------------------------------------------------------ */
