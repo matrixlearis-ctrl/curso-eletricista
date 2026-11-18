@@ -193,6 +193,9 @@ Observacoes:
   - `71f80f6` — correcao para 4 modulos e videos trocados pelos corretos
   - `2137f6b` — modernizacao visual da pagina inicial (energia neon)
   - `6d6bfa2` — banner abaixo do rodape da pagina inicial
+  - `b980ae1` — botao "Criar conta" verde claro na index
+  - `5d8b05e` — restaura a pasta `public/image` apagada no GitHub
+  - `1e19198` — preco alterado para R$ 16,90 (codigo, docs e variavel da Vercel)
 - `.gitignore`: `node_modules/`, `.env`, `data/`, `*.log`
 - `.gitattributes`: `.bat`/`.cmd` sempre com CRLF (para o `iniciar.bat` nao quebrar)
 - **Nunca** entra no repositorio: `.env` (segredos), `data/app.db`, `node_modules/`
