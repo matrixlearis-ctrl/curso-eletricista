@@ -3,11 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b1220">
+  <meta name="theme-color" content="#050b1c">
   <title>Entrar - Curso de Eletricista</title>
   <link rel="stylesheet" href="/css/estilo.css">
+  <link rel="stylesheet" href="/css/entrada.css">
 </head>
 <body>
+  <!-- Efeitos de energia do fundo (decorativo, nao interfere no conteudo) -->
+  <div class="campo-energia" aria-hidden="true">
+    <div class="malha"></div>
+    <div class="brilho brilho-a"></div>
+    <div class="brilho brilho-b"></div>
+    <div class="feixes"><i></i><i></i><i></i><i></i></div>
+    <div class="particulas" id="particulas"></div>
+  </div>
+
   <header class="topo">
     <div class="marca"><span class="raio">⚡</span> Curso de Eletricista</div>
   </header>
@@ -22,11 +32,15 @@
       <form id="form-login" novalidate>
         <div class="campo">
           <label for="email">E-mail</label>
-          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+          <div class="input-com-icone ico-email">
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+          </div>
         </div>
         <div class="campo">
           <label for="senha">Senha</label>
-          <input id="senha" name="senha" type="password" autocomplete="current-password" placeholder="Sua senha" required>
+          <div class="input-com-icone ico-senha">
+            <input id="senha" name="senha" type="password" autocomplete="current-password" placeholder="Sua senha" required>
+          </div>
         </div>
 
         <button class="btn" type="submit" id="btn-entrar">Entrar</button>
@@ -43,6 +57,7 @@
 
   <script src="/config-site.js"></script>
   <script src="/auth.js"></script>
+  <script src="/js/energia.js"></script>
   <script>
     (function () {
       const aviso = document.getElementById('aviso');
