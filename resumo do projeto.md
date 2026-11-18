@@ -293,6 +293,12 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   `200 {"received":true}`. Esse provedor nao e mais usado; o teste equivalente com PagBank esta pendente.
 - **E-mail real em producao**: `/api/health` com `email: true`; teste pelo proprio site gerou o token
   de confirmacao, o Resend registrou o envio com `last_event: delivered`, e a conta de teste foi removida
+- **PagBank sandbox (18/11/2026)**: `/api/health` com `pagBank: true`, `pagBankAmbiente: sandbox`;
+  conta de teste gerou Order Pix de R$ 16,90 com `chargeId`, `pedidoId`, copia e cola e imagem QR Code
+  (`qr_code_base64` preenchido). O sandbox marcou a cobranca como `PAID`; o polling de status e,
+  separadamente, um webhook assinado com `x-authenticity-token` liberaram o aluno. Contas de teste
+  removidas. Corrigido detalhe da API: `GET /charges/{id}` responde 406 se receber `Accept: application/json`.
+  Commits locais: `9af091b` e `9057284` (ainda sem push, aguardando token de producao na Vercel).
 
 ## 11. Seguranca
 
