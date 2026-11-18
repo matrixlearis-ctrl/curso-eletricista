@@ -113,6 +113,8 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
      desktop e pulso sempre ativo no celular (sem depender de hover). Funcao original intacta.
   5. **Formulario** — campos com icones SVG inline (envelope/cadeado), borda e iluminacao
      ciano no foco, fundo moderno e placeholders legiveis. Validacao nao foi alterada.
+- Botao **Criar conta** em verde claro adicionado logo abaixo de Entrar, com link para
+  `/cadastro.html` (o link de texto original da linha de links foi mantido).
 - `css/entrada.css` e `js/energia.js` sao carregados **somente** pela `index.html`:
   `estilo.css` e todas as outras paginas ficaram intactos.
 - Sem bibliotecas, sem video de fundo e sem imagens pesadas; `prefers-reduced-motion`
@@ -314,5 +316,6 @@ no proprio painel):
 - [x] Layout conferido no celular (viewport 390x844, sem overflow; menu lateral e cards testados)
 - [x] Pagina inicial modernizada (energia neon) e responsiva em 320-1280 px (validado em producao)
 - [x] Banner exibido abaixo do rodape da index (validado em producao)
+- [x] Botao "Criar conta" verde claro abaixo de Entrar, linkando para `/cadastro.html`
 - [x] Login da index preservado: campos vazios, senha errada e login valido redirecionando para `/aulas`
 - [x] Outras paginas inalteradas pelo visual novo (estilo verde original conferido)

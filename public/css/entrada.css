@@ -360,6 +360,34 @@ a { color: var(--sky); }
   50%      { box-shadow: 0 10px 30px rgba(30, 124, 240, .48), 0 0 30px rgba(95, 216, 255, .38), inset 0 1px 0 rgba(255, 255, 255, .35); }
 }
 
+/* botao Criar conta (verde claro), abaixo de Entrar */
+.btn-criar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 10px;
+  padding: 13px 18px;
+  color: #07321c;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  text-decoration: none;
+  background: linear-gradient(110deg, #a7f3d0 0%, #6ee7b7 45%, #4ade80 100%);
+  border: 1px solid rgba(187, 247, 208, .7);
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(74, 222, 128, .22), inset 0 1px 0 rgba(255, 255, 255, .5);
+  transition: transform .18s ease, filter .18s ease, box-shadow .25s ease;
+}
+.btn-criar:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 30px rgba(74, 222, 128, .34), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.btn-criar:active { transform: translateY(0); }
+.btn-criar:focus-visible { outline: 2px solid #bbf7d0; outline-offset: 3px; }
+
 /* avisos e links */
 .aviso { border-radius: 12px; }
 .aviso.erro { background: rgba(248, 113, 113, .1); border-color: rgba(248, 113, 113, .35); color: #ffd3d3; }
