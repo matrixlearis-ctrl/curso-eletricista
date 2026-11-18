@@ -206,14 +206,20 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
   → o erro 153 do YouTube era causado por abrir via `file://`
 - **Mobile** (viewport 390x844): sem overflow horizontal em aulas, login e pagamento
 - **Painel das aulas reformulado** em 18/11/2026 no estilo do site de referencia: navy profundo +
-  faixa de seguranca amarela, fontes Chakra Petch/Inter, hero, 3 indicadores, 5 modulos em cards,
+  faixa de seguranca amarela, fontes Chakra Petch/Inter, hero, 3 indicadores, **4 modulos** em cards,
   lista de aulas, player com Anterior/Assistida/Proxima, menu lateral no celular e progresso em
-  `localStorage` (`learis_progresso_v1`). Visual adaptado com a identidade do Curso de Eletricista,
-  sem copiar textos/imagens do modelo. Validado no navegador: 30 aulas, 5 modulos, navegacao,
-  player, marcacao, progresso, suporte (links em configuracao) e viewport 390x844 sem overflow.
-  Publicado em producao com o commit `d3997b9`; o deploy automatico foi bloqueado porque o autor
-  do commit nao tem permissao no projeto Vercel, entao o deploy foi disparado manualmente pela API
-  e ficou `READY`. Para evitar isso, usar a conta autorizada no `git config` ou liberar o autor no Vercel.
+  `localStorage` (`learis_progresso_v2`). Visual adaptado com a identidade do Curso de Eletricista,
+  sem copiar textos/imagens do modelo.
+- **Modulos e aulas conferidos com o aluno (18/11/2026):**
+  1. Fundamentos da Eletrica — aulas 1-7 (7)
+  2. Seguranca, Protecao e Ferramentas — aulas 8-13 (6)
+  3. Instalacoes Eletricas na Pratica — aulas 14-23 (10)
+  4. Aterramento e Quadros de Distribuicao — aulas 24-30 (7)
+  Total: 30 aulas. Os IDs de video foram corrigidos a partir do site de referencia
+  (`acessoeletrica.online`); antes estavam trocados (ex.: a "Aula 1" abria o video de "Tomadas").
+  Todos os 29 videos do YouTube foram validados pelo titulo real via oEmbed; a Aula 30 e a do Vimeo.
+  A chave de progresso passou de `v1` para `v2` para nao manter marcacoes do mapeamento antigo.
+  Validado no navegador: 30 aulas, navegacao, player, marcacao, progresso, suporte e viewport 390x844.
 - **Producao (Vercel + `learis.com.br`)**: `/api/health` e `/api/config` OK; cadastro → login →
   `/aulas` entregou as 30 aulas, Aula 28 e Aula 30 corretas; sem cookie `/aulas` redireciona (302);
   DNS A/CNAME e HTTPS validados em `learis.com.br` e `www.learis.com.br`
