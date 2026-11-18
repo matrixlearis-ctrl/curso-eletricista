@@ -1,6 +1,6 @@
 # Resumo do Projeto — Curso de Eletricista (`https://learis.com.br`)
 
-Ultima atualizacao: 17/11/2026
+Ultima atualizacao: 17/11/2026 (inclui modernizacao visual da pagina inicial e banner)
 
 ## 1. Objetivo
 Curso de Eletricista no dominio `https://learis.com.br`, com sistema **no modelo do LotoBot**:
@@ -13,7 +13,8 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 - **Repositorio:** `https://github.com/matrixlearis-ctrl/curso-eletricista`
 
 ## 2. Conteudo do curso
-- Origem dos videos: `https://eletrica-para-todos.tinyhugs.online/` (site publico)
+- Origem dos videos: site publico de referencia `https://acessoeletrica.online/#aulas`
+  (o projeto tambem ja usou `https://eletrica-para-todos.tinyhugs.online/`)
 - **30 aulas** em `private/aulas.html`, player incorporado + botao "Assistir no YouTube" em cada card
 - 29 videos do YouTube + 1 do Vimeo (Aula 30: `vimeo.com/1123237183`)
 - Links corrigidos ao longo do projeto:
@@ -82,7 +83,7 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 
 | Arquivo | O que e |
 | --- | --- |
-| `index.html` | login |
+| `index.html` | login (visual modernizado com energia neon + banner) |
 | `cadastro.html` | criar conta (+ reenviar confirmacao; em modo local mostra o botao "Confirmar meu e-mail agora") |
 | `confirmar-email.html` | valida o link do e-mail |
 | `recuperar-senha.html` / `redefinir-senha.html` | fluxo de nova senha |
@@ -90,11 +91,34 @@ com liberacao automatica por webhook e area de aulas protegida. Tudo responsivo,
 | `404.html` | pagina nao encontrada |
 | `auth.js` | helpers de sessao/fetch |
 | `config-site.js` | config publica de reserva (valor 19.9, textos de suporte) |
-| `css/estilo.css` | estilos |
-| `image/banner.jpg` | banner |
+| `css/estilo.css` | estilos compartilhados (mantidos originalmente) |
+| `css/entrada.css` | estilos exclusivos da pagina inicial (energia/neon) |
+| `js/energia.js` | cria as particulas do fundo da index (sem bibliotecas) |
+| `image/banner.jpg` | banner exibido abaixo do rodape da index |
 
 - Layout **mobile-first**: 1 coluna no celular, botoes de largura total, sem rolagem horizontal
 - Cabecalho das aulas mostra o nome do aluno (via `/api/auth/me`) e botao "Sair"
+
+### Pagina inicial (login) — modernizacao visual em 17/11/2026
+
+- Identidade de energia eletrica: fundo azul-marinho/preto, azul eletrico como cor principal,
+  detalhes em ciano/branco e brilhos neon discretos (alta legibilidade).
+- Efeitos implementados (CSS para animacoes; JavaScript apenas para criar as particulas):
+  1. **Energia no fundo** — malha de engenharia, brilhos que respiram, 4 feixes de luz que
+     surgem/desaparecem e pontinhos subindo (6 no celular, 14 no desktop).
+  2. **Iluminacao acendendo** — o cartao entra com brilho e halo pulsante; o foco nos campos
+     acende um glow azul ao redor do elemento.
+  3. **Simbolo ⚡ preservado** — ganhou neon azul pulsante e uma pequena faisca animada.
+  4. **Botao Entrar** — gradiente azul eletrico, brilho externo, varredura de luz, hover no
+     desktop e pulso sempre ativo no celular (sem depender de hover). Funcao original intacta.
+  5. **Formulario** — campos com icones SVG inline (envelope/cadeado), borda e iluminacao
+     ciano no foco, fundo moderno e placeholders legiveis. Validacao nao foi alterada.
+- `css/entrada.css` e `js/energia.js` sao carregados **somente** pela `index.html`:
+  `estilo.css` e todas as outras paginas ficaram intactos.
+- Sem bibliotecas, sem video de fundo e sem imagens pesadas; `prefers-reduced-motion`
+  desliga as animacoes e esconde particulas/feixes.
+- `image/banner.jpg` (1280x853, 337 KB, `loading="lazy"`) aparece **abaixo** do texto
+  "Curso de Eletricista • learis.com.br", com borda ciano e sombra suave.
 
 ## 6. Deploy — Vercel
 
@@ -155,6 +179,12 @@ Observacoes:
   - `8c0bd83` — primeiro commit do projeto completo
   - `fbf2068` — envio inicial pelo usuario
   - `b807ce6` — preco R$ 19,90 + preparacao para Vercel
+  - `d3997b9` — painel das aulas reformulado
+  - `abf68a6` — e-mail de suporte `learisgrup@gmail.com`
+  - `4ceea16` — link do grupo de WhatsApp no suporte
+  - `71f80f6` — correcao para 4 modulos e videos trocados pelos corretos
+  - `2137f6b` — modernizacao visual da pagina inicial (energia neon)
+  - `6d6bfa2` — banner abaixo do rodape da pagina inicial
 - `.gitignore`: `node_modules/`, `.env`, `data/`, `*.log`
 - `.gitattributes`: `.bat`/`.cmd` sempre com CRLF (para o `iniciar.bat` nao quebrar)
 - **Nunca** entra no repositorio: `.env` (segredos), `data/app.db`, `node_modules/`
@@ -205,6 +235,15 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 - **Pagina de aulas em HTTP** (`localhost`): 30 cards, sem erros no console
   → o erro 153 do YouTube era causado por abrir via `file://`
 - **Mobile** (viewport 390x844): sem overflow horizontal em aulas, login e pagamento
+- **Visual da index modernizado (17/11/2026)**: testado em 320, 360, 375, 390, 430, 768 e 1280 px
+  no navegador, sem rolagem horizontal nem elementos cortados; campos e botao com 50-52 px de altura;
+  6 particulas no celular e 14 no desktop; `prefers-reduced-motion` desliga animacoes e particulas.
+  Login validado nos tres cenarios: campos vazios, senha errada e login correto → redirecionou para
+  `/aulas`. `cadastro.html` e `recuperar-senha.html` continuaram com o estilo verde original.
+  Publicado com o commit `2137f6b` e verificado em producao.
+- **Banner na index (17/11/2026)**: imagem 1280x853 carregando corretamente abaixo do rodape em
+  todas as larguras testadas (320 a 1280 px), sem overflow; `loading="lazy"`. Commit `6d6bfa2`,
+  HTTP 200 em producao.
 - **Painel das aulas reformulado** em 18/11/2026 no estilo do site de referencia: navy profundo +
   faixa de seguranca amarela, fontes Chakra Petch/Inter, hero, 3 indicadores, **4 modulos** em cards,
   lista de aulas, player com Anterior/Assistida/Proxima, menu lateral no celular e progresso em
@@ -251,8 +290,10 @@ Abrir `http://localhost:3000`. A janela do terminal precisa ficar aberta (e o se
 1. **Webhook no painel do Mercado Pago** (opcional: `notification_url` ja e enviada por cobranca)
 2. **Rotacionar os segredos** listados na secao 11 (inclusive o token da Vercel e o do MP)
 3. Confirmar se `Capturar.JPG` (print enviado ao repo) nao expoe dados sensiveis
-4. Se quiser, adicionar o WhatsApp de suporte em `public/config-site.js` (`suporteWhatsapp`, ex.: `5511999999999`)
-5. Opcional: pagina de vendas publica (o painel do aluno com progresso e marcacao ja esta pronto)
+4. Opcional: pagina de vendas publica (o painel do aluno com progresso e marcacao ja esta pronto)
+
+Itens ja concluidos e que nao sao mais pendencia: links de suporte (WhatsApp e e-mail) preenchidos
+em `public/config-site.js` e no painel `/aulas`; modernizacao visual da index e banner publicados.
 
 Suporte configurado no painel `/aulas` via `config-site.js` (e com os mesmos valores como reserva
 no proprio painel):
@@ -271,3 +312,7 @@ no proprio painel):
 - [x] `/aulas` abre com as 30 aulas so para aluno liberado (validado em producao)
 - [ ] E-mail "acesso liberado" chega ao aluno
 - [x] Layout conferido no celular (viewport 390x844, sem overflow; menu lateral e cards testados)
+- [x] Pagina inicial modernizada (energia neon) e responsiva em 320-1280 px (validado em producao)
+- [x] Banner exibido abaixo do rodape da index (validado em producao)
+- [x] Login da index preservado: campos vazios, senha errada e login valido redirecionando para `/aulas`
+- [x] Outras paginas inalteradas pelo visual novo (estilo verde original conferido)
