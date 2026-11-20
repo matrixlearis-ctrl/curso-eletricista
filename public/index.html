@@ -66,12 +66,19 @@
       const aviso = document.getElementById('aviso');
       const form = document.getElementById('form-login');
       const botao = document.getElementById('btn-entrar');
+      const params = new URLSearchParams(window.location.search);
 
       // Se ja estiver logado, manda direto para o destino certo.
       usuarioAtual().then(function (u) {
         if (!u) return;
         window.location.href = u.liberado ? '/aulas' : '/pagamento.html';
       });
+
+      if (params.get('cadastrado') === '1') {
+        const emailParam = params.get('email') || '';
+        if (emailParam) document.getElementById('email').value = emailParam;
+        mostrarAviso(aviso, 'ok', 'Conta criada com sucesso! Faça login para acessar o pagamento.');
+      }
 
       form.addEventListener('submit', async function (evento) {
         evento.preventDefault();
@@ -90,11 +97,7 @@
         liberarBotao(botao);
 
         if (!r.ok || !r.dados.success) {
-          let msg = r.dados.message || 'Nao foi possivel entrar.';
-          if (r.dados.precisaConfirmar) {
-            msg += ' <a href="/cadastro.html?reenviar=' + encodeURIComponent(email) + '">Reenviar e-mail de confirmacao</a>';
-          }
-          mostrarAviso(aviso, 'erro', msg);
+          mostrarAviso(aviso, 'erro', (r.dados && r.dados.message) || 'Nao foi possivel entrar.');
           return;
         }
 

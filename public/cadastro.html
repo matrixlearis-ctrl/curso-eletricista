@@ -15,7 +15,7 @@
   <main class="palco">
     <section class="cartao">
       <h1>Criar sua conta</h1>
-      <p class="apoio">Leva menos de um minuto. Depois voce confirma o e-mail e libera o acesso.</p>
+      <p class="apoio">Leva menos de um minuto. Depois você faz login e segue para o pagamento.</p>
 
       <div id="aviso" class="aviso"></div>
 
@@ -56,42 +56,6 @@
       const aviso = document.getElementById('aviso');
       const form = document.getElementById('form-cadastro');
       const botao = document.getElementById('btn-criar');
-      const params = new URLSearchParams(window.location.search);
-
-      // Reenvio de confirmacao (vindo da tela de login)
-      const emailReenviar = params.get('reenviar');
-      if (emailReenviar) {
-        document.getElementById('email').value = emailReenviar;
-        mostrarAviso(aviso, 'info', 'Sua conta existe, mas o e-mail ainda nao foi confirmado. Clique em <b>Reenviar confirmacao</b> abaixo.');
-        adicionarBotaoReenviar(emailReenviar);
-      }
-
-      function adicionarBotaoReenviar(email) {
-        if (document.getElementById('btn-reenviar')) return;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.id = 'btn-reenviar';
-        btn.className = 'btn contorno';
-        btn.style.marginTop = '10px';
-        btn.textContent = 'Reenviar confirmacao';
-        btn.addEventListener('click', async function () {
-          ocupado(btn, 'Enviando...');
-          const r = await api('/api/auth/reenviar-confirmacao', { body: { email: email } });
-          liberarBotao(btn);
-          mostrarAviso(aviso, r.ok ? 'ok' : 'erro', r.dados.message + linkDevHtml(r.dados));
-        });
-        form.after(btn);
-      }
-
-      function linkDevHtml(dados) {
-        if (!dados || !dados.linkDev) return '';
-        return '<div style="margin-top:14px">' +
-          '<a class="btn" href="' + dados.linkDev + '" style="background:#38bdf8;color:#04131d">Confirmar meu e-mail agora</a>' +
-          '<div style="margin-top:8px;font-size:12px;line-height:1.4">' +
-          '<b>Modo local:</b> nenhum e-mail e enviado enquanto o Resend nao estiver configurado. ' +
-          'Use o botao acima (o mesmo link aparece na janela preta do servidor).' +
-          '</div></div>';
-      }
 
       form.addEventListener('submit', async function (evento) {
         evento.preventDefault();
@@ -107,11 +71,11 @@
           return;
         }
         if (senha.length < 6) {
-          mostrarAviso(aviso, 'erro', 'A senha precisa ter no minimo 6 caracteres.');
+          mostrarAviso(aviso, 'erro', 'A senha precisa ter no mínimo 6 caracteres.');
           return;
         }
         if (senha !== senha2) {
-          mostrarAviso(aviso, 'erro', 'As senhas nao conferem.');
+          mostrarAviso(aviso, 'erro', 'As senhas não conferem.');
           return;
         }
 
@@ -120,19 +84,14 @@
         liberarBotao(botao);
 
         if (!r.ok || !r.dados.success) {
-          if (r.status === 409) adicionarBotaoReenviar(email);
-          mostrarAviso(aviso, 'erro', r.dados.message || 'Nao foi possivel criar a conta.');
+          mostrarAviso(aviso, 'erro', (r.dados && r.dados.message) || 'Não foi possível criar a conta.');
           return;
         }
 
-        const extra = linkDevHtml(r.dados);
-        mostrarAviso(aviso, 'ok', (r.dados.message || 'Conta criada!') + extra);
-
-        if (r.dados.linkDev) {
-          adicionarBotaoReenviar(email);
-        } else {
-          form.reset();
-        }
+        mostrarAviso(aviso, 'ok', (r.dados.message || 'Conta criada com sucesso!') + ' Redirecionando para o login...');
+        setTimeout(function () {
+          window.location.href = '/index.html?cadastrado=1&email=' + encodeURIComponent(email);
+        }, 1200);
       });
     })();
   </script>

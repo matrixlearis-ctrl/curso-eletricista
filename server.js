@@ -601,23 +601,17 @@ api.post('/auth/cadastro', async (req, res) => {
       nome,
       email,
       senha_hash: hashSenha(senha),
-      confirmado: false,
+      confirmado: true,
       liberado: false,
       criado_ip: ip
     });
     const usuario = inseridos && inseridos[0];
     if (!usuario) return res.status(500).json({ success: false, message: 'Nao foi possivel criar a conta agora.' });
 
-    const token = await criarEmailToken(usuario.id, 'confirmar', 24);
-    const link = `${PUBLIC_BASE_URL}/confirmar-email.html?t=${token}`;
-    await enviarEmail(email, 'Confirme seu cadastro - Curso de Eletricista', htmlConfirmacao(link, nome));
-
-    const resposta = {
+    res.json({
       success: true,
-      message: 'Cadastro criado! Enviamos um e-mail de confirmacao (confira tambem o spam).'
-    };
-    if (!IS_PROD) resposta.linkDev = link;
-    res.json(resposta);
+      message: 'Conta criada com sucesso! Agora faça login para acessar o pagamento.'
+    });
   } catch (e) {
     console.error('[CADASTRO]', e.message);
     if (e.codigo === '23505') {
@@ -644,23 +638,7 @@ api.get('/auth/confirmar-email', async (req, res) => {
 });
 
 api.post('/auth/reenviar-confirmacao', async (req, res) => {
-  if (!BANCO_CONFIGURADO) return bancoIndisponivel(res);
-  const email = String((req.body || {}).email || '').trim().toLowerCase();
-  if (!emailValido(email)) return res.status(400).json({ success: false, message: 'E-mail invalido.' });
-  const generico = { success: true, message: 'Se existir uma conta pendente com este e-mail, reenviamos o link de confirmacao.' };
-  try {
-    const u = await usuarioPorEmail(email);
-    if (!u) return res.json(generico);
-    if (u.confirmado) return res.json({ success: true, message: 'Este e-mail ja esta confirmado. Faca login para continuar.' });
-    const token = await criarEmailToken(u.id, 'confirmar', 24);
-    const link = `${PUBLIC_BASE_URL}/confirmar-email.html?t=${token}`;
-    await enviarEmail(u.email, 'Confirme seu cadastro - Curso de Eletricista', htmlConfirmacao(link, u.nome));
-    if (!IS_PROD) generico.linkDev = link;
-    res.json(generico);
-  } catch (e) {
-    console.error('[REENVIAR]', e.message);
-    res.json(generico);
-  }
+  res.json({ success: true, message: 'A confirmação de e-mail não é mais necessária. Faça login com sua conta.' });
 });
 
 api.post('/auth/login', async (req, res) => {
@@ -672,9 +650,6 @@ api.post('/auth/login', async (req, res) => {
     const u = await usuarioPorEmail(email);
     if (!u || !verificarSenha(senha, u.senha_hash)) {
       return res.status(401).json({ success: false, message: 'E-mail ou senha incorretos.' });
-    }
-    if (!u.confirmado) {
-      return res.status(403).json({ success: false, message: 'Confirme seu e-mail antes de entrar.', precisaConfirmar: true });
     }
     const token = await criarSessao(res, u.id);
     res.json({ success: true, token, user: usuarioPublico(u) });
