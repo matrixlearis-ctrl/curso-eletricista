@@ -37,6 +37,15 @@ const COOKIE_NAME = 'learis_sessao';
 const IS_PROD = process.env.NODE_ENV === 'production';
 const ALLOW_DEV_PAYMENT = process.env.ALLOW_DEV_PAYMENT === '1' && !IS_PROD;
 
+// Pagamento fixo (Pix manual) - chave fixa, sem confirmacao automatica.
+const PIX_CHAVE_FIXA = process.env.PIX_CHAVE_FIXA || '18125a2a-480d-43fe-a3e6-1f6e1f1414e1';
+const PIX_RECEBEDOR_NOME = process.env.PIX_RECEBEDOR_NOME || 'CURSO ELETRICISTA';
+const PIX_RECEBEDOR_CIDADE = process.env.PIX_RECEBEDOR_CIDADE || 'SAO PAULO';
+const WHATSAPP_ADMIN_URL = process.env.WHATSAPP_ADMIN_URL || '';
+const ADMIN_SENHA = process.env.ADMIN_SENHA || '';
+const ADMIN_COOKIE = 'learis_admin';
+const ADMIN_SESSAO_HORAS = 12;
+
 const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://vvsyquozzttiivgsswfz.supabase.co').replace(/\/+$/, '');
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const BANCO_CONFIGURADO = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
@@ -129,6 +138,82 @@ function limparCookieSessao(res) {
 }
 function agoraISO() {
   return new Date().toISOString();
+}
+
+// ---------------------------------------------------------------- Pix fixo (BR Code estatico)
+function crc16Pix(payload) {
+  let crc = 0xffff;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) crc = ((crc << 1) ^ 0x1021) & 0xffff;
+      else crc = (crc << 1) & 0xffff;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+function emv(id, valor) {
+  const v = String(valor);
+  return id + String(v.length).padStart(2, '0') + v;
+}
+function gerarPixCopiaECola({ chave, nome, cidade, valor, txid = '***' }) {
+  const mai = emv('00', 'br.gov.bcb.pix') + emv('01', chave);
+  let p = '';
+  p += emv('00', '01');
+  p += emv('01', '11');
+  p += emv('26', mai);
+  p += emv('52', '0000');
+  p += emv('53', '986');
+  p += emv('54', Number(valor).toFixed(2));
+  p += emv('58', 'BR');
+  p += emv('59', String(nome).substring(0, 25));
+  p += emv('60', String(cidade).substring(0, 15));
+  p += emv('62', emv('05', txid));
+  p += '6304';
+  return p + crc16Pix(p);
+}
+const PIX_COPIA_E_COLA_FIXO = gerarPixCopiaECola({
+  chave: PIX_CHAVE_FIXA,
+  nome: PIX_RECEBEDOR_NOME,
+  cidade: PIX_RECEBEDOR_CIDADE,
+  valor: VALOR_ACESSO
+});
+
+// ---------------------------------------------------------------- admin
+function adminSegredo() {
+  return sha256('admin|' + ADMIN_SENHA + '|' + SUPABASE_SERVICE_ROLE_KEY);
+}
+function adminTokenCriar() {
+  const exp = Date.now() + ADMIN_SESSAO_HORAS * 3600 * 1000;
+  const payload = `admin.${exp}`;
+  const sig = crypto.createHmac('sha256', adminSegredo()).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+}
+function adminTokenValido(token) {
+  if (!ADMIN_SENHA || !token) return false;
+  const partes = String(token).split('.');
+  if (partes.length !== 3 || partes[0] !== 'admin') return false;
+  const exp = Number(partes[1]);
+  if (!Number.isFinite(exp) || exp < Date.now()) return false;
+  const payload = `admin.${partes[1]}`;
+  const sig = crypto.createHmac('sha256', adminSegredo()).update(payload).digest('hex');
+  return seguroIgual(partes[2], sig);
+}
+function definirCookieAdmin(res, token) {
+  res.cookie(ADMIN_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: PUBLIC_BASE_URL.startsWith('https://'),
+    maxAge: ADMIN_SESSAO_HORAS * 3600 * 1000,
+    path: '/'
+  });
+}
+function limparCookieAdmin(res) {
+  res.clearCookie(ADMIN_COOKIE, { path: '/' });
+}
+function adminDaRequisicao(req) {
+  const token = lerCookies(req)[ADMIN_COOKIE] || '';
+  return adminTokenValido(token);
 }
 
 // Limite simples em memoria (anti forca bruta)
@@ -664,7 +749,10 @@ api.get('/config', (req, res) => {
     site: 'Curso de Eletricista',
     baseUrl: PUBLIC_BASE_URL,
     devPayment: ALLOW_DEV_PAYMENT,
-    pagamento: 'pagbank',
+    pagamento: 'pix-fixo-manual',
+    pixCopiaECola: PIX_COPIA_E_COLA_FIXO,
+    pixChave: PIX_CHAVE_FIXA,
+    whatsappAdminUrl: WHATSAPP_ADMIN_URL,
     banco: BANCO_CONFIGURADO ? 'supabase' : 'nao-configurado'
   });
 });
@@ -702,79 +790,24 @@ async function liberarComAviso(userId) {
 api.post('/pagamento/pix', requireAuth, async (req, res) => {
   const u = req.usuario;
   if (u.liberado) return res.status(400).json({ success: false, message: 'Seu acesso ja esta liberado.', liberado: true });
-  if (!PAGBANK_TOKEN) {
-    return res.status(500).json({ success: false, message: 'Pagamento indisponivel agora: PAGBANK_TOKEN nao configurado no servidor.' });
-  }
 
-  const cpf = String((req.body || {}).cpf || '').replace(/\D/g, '');
-  if (!cpfValido(cpf)) {
-    return res.status(400).json({ success: false, message: 'Informe um CPF valido para gerar o Pix.' });
-  }
-
-  try {
-    const valor = Number((req.body || {}).valor) > 0 ? Number(req.body.valor) : VALOR_ACESSO;
-    const pix = await pagbankCriarPix({
-      userId: u.id,
-      nome: u.nome,
-      email: u.email,
-      cpf,
-      valor,
-      descricao: DESCRICAO_PAGAMENTO
-    });
-
-    // A coluna mp_id continua sendo a chave interna da cobranca (agora, do PagBank).
-    await sbInsert('pagamentos', {
-      user_id: u.id,
-      mp_id: pix.chargeId,
-      valor,
-      status: pix.status || 'pending',
-      metodo: 'pix-pagbank'
-    });
-
-    res.json({
-      success: true,
-      chargeId: pix.chargeId,
-      pedidoId: pix.pedidoId,
-      status: pix.status,
-      qr_code: pix.qrCode,
-      qr_code_base64: pix.qrCodeBase64,
-      valor
-    });
-  } catch (e) {
-    console.error('[PIX]', e.message);
-    res.status(400).json({ success: false, message: e.message || 'Nao foi possivel gerar o Pix agora.' });
-  }
+  res.json({
+    success: true,
+    modo: 'fixo',
+    status: 'pending',
+    qr_code: PIX_COPIA_E_COLA_FIXO,
+    pix_chave: PIX_CHAVE_FIXA,
+    valor: VALOR_ACESSO,
+    liberacao: 'manual',
+    whatsappAdminUrl: WHATSAPP_ADMIN_URL
+  });
 });
 
 api.post('/pagamento/status', requireAuth, async (req, res) => {
-  const u = req.usuario;
-  if (u.liberado) return res.json({ success: true, status: 'approved', liberado: true });
-  const chargeId = String((req.body || {}).chargeId || '');
-  if (!chargeId) return res.status(400).json({ success: false, message: 'chargeId obrigatorio.' });
-
   try {
-    const registros = await sbSelect(
-      'pagamentos',
-      `mp_id=eq.${encodeURIComponent(chargeId)}&user_id=eq.${encodeURIComponent(u.id)}`,
-      'id,status',
-      1
-    );
-    const registro = registros && registros[0];
-    let status = registro ? registro.status : 'pending';
-    let liberado = status === 'approved';
-
-    if (!liberado && PAGBANK_TOKEN) {
-      const charge = await pagbankConsultarCharge(chargeId);
-      if (charge && charge.status === 'PAID' && String(charge.reference_id || '') === u.id && registro) {
-        status = 'approved';
-        await sbUpdate('pagamentos', `id=eq.${encodeURIComponent(registro.id)}`, { status: 'approved' });
-        await liberarComAviso(u.id);
-        liberado = true;
-      } else if (charge && charge.status) {
-        status = pagbankStatusLocal(charge.status);
-      }
-    }
-    res.json({ success: true, status, liberado });
+    const u = await usuarioPorId(req.usuario.id);
+    const liberado = !!(u && u.liberado);
+    res.json({ success: true, status: liberado ? 'approved' : 'pending', liberado, liberacao: 'manual' });
   } catch (e) {
     console.error('[STATUS]', e.message);
     res.status(400).json({ success: false, message: e.message });
@@ -866,6 +899,87 @@ api.post('/pagamento/simular', requireAuth, async (req, res) => {
   } catch (e) {
     console.error('[SIMULAR]', e.message);
     res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// ---------------------------------------------------------------- admin
+function requireAdmin(req, res, next) {
+  if (!adminDaRequisicao(req)) {
+    return res.status(401).json({ success: false, message: 'Senha de administrador invalida ou sessao expirada.' });
+  }
+  next();
+}
+
+api.post('/admin/login', (req, res) => {
+  if (!ADMIN_SENHA) {
+    return res.status(500).json({ success: false, message: 'ADMIN_SENHA nao configurada no servidor.' });
+  }
+  const senha = String((req.body || {}).senha || '');
+  if (!seguroIgual(senha, ADMIN_SENHA)) {
+    return res.status(401).json({ success: false, message: 'Senha incorreta.' });
+  }
+  definirCookieAdmin(res, adminTokenCriar());
+  res.json({ success: true });
+});
+
+api.post('/admin/logout', (req, res) => {
+  limparCookieAdmin(res);
+  res.json({ success: true });
+});
+
+api.get('/admin/me', (req, res) => {
+  res.json({ success: true, admin: adminDaRequisicao(req), configurado: Boolean(ADMIN_SENHA) });
+});
+
+api.get('/admin/usuarios', requireAdmin, async (req, res) => {
+  if (!BANCO_CONFIGURADO) return bancoIndisponivel(res);
+  try {
+    const q = String(req.query.q || '').trim().toLowerCase();
+    let caminho = '/usuarios?select=id,nome,email,confirmado,liberado,liberado_em,criado_em&order=criado_em.desc&limit=50';
+    if (q) {
+      const like = encodeURIComponent(`*${q}*`);
+      caminho += `&or=(email.ilike.${like},nome.ilike.${like})`;
+    }
+    const usuarios = await sbJson(caminho);
+    res.json({ success: true, usuarios: usuarios || [] });
+  } catch (e) {
+    console.error('[ADMIN USUARIOS]', e.message);
+    res.status(500).json({ success: false, message: e.message || 'Erro ao listar usuarios.' });
+  }
+});
+
+api.post('/admin/liberar', requireAdmin, async (req, res) => {
+  if (!BANCO_CONFIGURADO) return bancoIndisponivel(res);
+  try {
+    const userId = String((req.body || {}).userId || '').trim();
+    const email = String((req.body || {}).email || '').trim().toLowerCase();
+    let u = null;
+    if (userId && UUID_RE.test(userId)) u = await usuarioPorId(userId);
+    else if (emailValido(email)) u = await usuarioPorEmail(email);
+    if (!u) return res.status(404).json({ success: false, message: 'Usuario nao encontrado.' });
+
+    if (!u.liberado) {
+      await liberarUsuario(u.id);
+      try {
+        await sbInsert('pagamentos', {
+          user_id: u.id,
+          mp_id: `manual-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
+          valor: VALOR_ACESSO,
+          status: 'approved',
+          metodo: 'pix-manual-fixo'
+        });
+      } catch (e) {
+        console.warn('[ADMIN LIBERAR] registro pagamento:', e.message);
+      }
+      if (u.email) {
+        await enviarEmail(u.email, 'Acesso liberado - Curso de Eletricista', htmlLiberado(`${PUBLIC_BASE_URL}/aulas`, u.nome));
+      }
+    }
+    const atualizado = await usuarioPorId(u.id);
+    res.json({ success: true, user: usuarioPublico(atualizado) });
+  } catch (e) {
+    console.error('[ADMIN LIBERAR]', e.message);
+    res.status(500).json({ success: false, message: e.message || 'Erro ao liberar usuario.' });
   }
 });
 

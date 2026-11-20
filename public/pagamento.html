@@ -24,23 +24,20 @@
         <span class="valor" id="valor">R$ --</span>
       </div>
 
-      <div id="etapa-gerar">
-        <div class="campo">
-          <label for="cpf">CPF do pagador</label>
-          <input id="cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14">
-          <span class="dica">O PagBank exige o CPF para emitir o QR Code Pix.</span>
+      <div id="etapa-pix">
+        <div class="aviso visivel info" style="margin-bottom:14px">
+          <strong>Pagamento manual:</strong> faça o Pix com o QR Code ou o código copia e cola abaixo. Depois, <strong>envie o comprovante para o administrador do grupo no WhatsApp</strong> para que seu acesso seja liberado.
         </div>
-        <button class="btn" type="button" id="btn-gerar">Gerar Pix</button>
-        <p class="dica" style="margin-top:10px;text-align:center;color:#7f93b2;font-size:13px">
-          Pagamento unico via Pix, confirmado na hora.
-        </p>
-      </div>
 
-      <div id="etapa-pix" class="escondido">
+        <div id="bloco-whats" class="escondido" style="margin-bottom:14px;text-align:center">
+          <a id="link-whats" class="btn" href="#" target="_blank" rel="noopener">Enviar comprovante no WhatsApp</a>
+        </div>
+
         <ol class="passos">
           <li>Abra o app do seu banco e escolha pagar com Pix.</li>
-          <li>Escaneie o QR Code abaixo ou use o codigo copia e cola.</li>
-          <li>Confirme o pagamento. A liberacao e automatica.</li>
+          <li>Escaneie o QR Code abaixo ou use o código copia e cola.</li>
+          <li>Envie o comprovante para o administrador do grupo no WhatsApp.</li>
+          <li>Aguarde a liberação manual do seu acesso.</li>
         </ol>
 
         <img id="qr" class="qr" alt="QR Code do Pix" src="">
@@ -48,13 +45,14 @@
           <input id="pix-codigo" type="text" readonly value="">
           <button class="btn" type="button" id="btn-copiar">Copiar</button>
         </div>
+        <p id="chave-info" class="dica" style="margin-top:8px;text-align:center;color:#7f93b2;font-size:13px;word-break:break-all"></p>
 
-        <button class="btn contorno" type="button" id="btn-verificar">Ja paguei, verificar</button>
-        <p id="status" style="text-align:center;color:#9fb0cc;font-size:13px;margin:12px 0 0">Aguardando confirmacao...</p>
+        <button class="btn contorno" type="button" id="btn-verificar" style="margin-top:14px">Já enviei, verificar liberação</button>
+        <p id="status" style="text-align:center;color:#9fb0cc;font-size:13px;margin:12px 0 0">Aguardando liberação manual pelo administrador...</p>
       </div>
 
       <div id="etapa-ok" class="escondido">
-        <div class="aviso visivel ok" style="margin-bottom:16px">Pagamento confirmado! Seu acesso esta liberado.</div>
+        <div class="aviso visivel ok" style="margin-bottom:16px">Pagamento confirmado! Seu acesso está liberado.</div>
         <a class="btn" href="/aulas">Entrar nas aulas</a>
       </div>
 
@@ -77,32 +75,20 @@
       const aviso = document.getElementById('aviso');
       const saudacao = document.getElementById('saudacao');
       const valorEl = document.getElementById('valor');
-      const etapaGerar = document.getElementById('etapa-gerar');
       const etapaPix = document.getElementById('etapa-pix');
       const etapaOk = document.getElementById('etapa-ok');
       const etapaDev = document.getElementById('etapa-dev');
-      const btnGerar = document.getElementById('btn-gerar');
-      const cpfInput = document.getElementById('cpf');
       const btnCopiar = document.getElementById('btn-copiar');
       const btnVerificar = document.getElementById('btn-verificar');
       const btnSimular = document.getElementById('btn-simular');
       const qr = document.getElementById('qr');
       const codigo = document.getElementById('pix-codigo');
       const statusEl = document.getElementById('status');
+      const chaveInfo = document.getElementById('chave-info');
+      const blocoWhats = document.getElementById('bloco-whats');
+      const linkWhats = document.getElementById('link-whats');
 
-      let chargeIdAtual = null;
       let timer = null;
-
-      function mascaraCpf(valor) {
-        const n = String(valor || '').replace(/\D/g, '').slice(0, 11);
-        return n.replace(/(\d{3})(\d)/, '$1.$2')
-          .replace(/(\d{3})(\d)/, '$1.$2')
-          .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-      }
-
-      cpfInput.addEventListener('input', function () {
-        cpfInput.value = mascaraCpf(cpfInput.value);
-      });
 
       document.getElementById('link-sair').addEventListener('click', function (e) {
         e.preventDefault();
@@ -115,7 +101,7 @@
 
       function iniciarPolling() {
         if (timer) clearInterval(timer);
-        timer = setInterval(verificar, 5000);
+        timer = setInterval(verificar, 10000);
       }
       function pararPolling() {
         if (timer) clearInterval(timer);
@@ -123,57 +109,16 @@
       }
 
       async function verificar() {
-        if (!chargeIdAtual) return;
-        const r = await api('/api/pagamento/status', { body: { chargeId: chargeIdAtual } });
-        if (r.ok && r.dados.liberado) {
+        const r = await api('/api/pagamento/status', { body: {} });
+        if (r.ok && r.dados && r.dados.liberado) {
           pararPolling();
           etapaPix.classList.add('escondido');
           etapaOk.classList.remove('escondido');
           esconderAviso(aviso);
+          return true;
         }
+        return false;
       }
-
-      btnGerar.addEventListener('click', async function () {
-        esconderAviso(aviso);
-        const cpf = String(cpfInput.value || '').replace(/\D/g, '');
-        if (cpf.length !== 11) {
-          mostrarAviso(aviso, 'erro', 'Informe o CPF do pagador para gerar o Pix.');
-          cpfInput.focus();
-          return;
-        }
-        ocupado(btnGerar, 'Gerando Pix...');
-        const r = await api('/api/pagamento/pix', { body: { cpf } });
-        liberarBotao(btnGerar);
-
-        if (!r.ok || !r.dados.success) {
-          if (r.dados && r.dados.liberado) {
-            window.location.href = '/aulas';
-            return;
-          }
-          mostrarAviso(aviso, 'erro', r.dados.message || 'Nao foi possivel gerar o Pix.');
-          return;
-        }
-
-        chargeIdAtual = r.dados.chargeId;
-        try { localStorage.setItem('learis_cpf', cpf); } catch (e) {}
-        valorEl.textContent = formatarReal(r.dados.valor);
-
-        if (r.dados.qr_code_base64) {
-          qr.src = 'data:image/png;base64,' + r.dados.qr_code_base64;
-          qr.classList.remove('escondido');
-        } else {
-          qr.classList.add('escondido');
-        }
-        if (r.dados.qr_code) {
-          codigo.value = r.dados.qr_code;
-        } else {
-          document.querySelector('.copia').classList.add('escondido');
-        }
-        etapaGerar.classList.add('escondido');
-        etapaPix.classList.remove('escondido');
-        statusEl.textContent = 'Aguardando confirmacao...';
-        iniciarPolling();
-      });
 
       btnCopiar.addEventListener('click', async function () {
         if (!codigo.value) return;
@@ -191,27 +136,26 @@
 
       btnVerificar.addEventListener('click', async function () {
         ocupado(btnVerificar, 'Verificando...');
-        await verificar();
+        const ok = await verificar();
         liberarBotao(btnVerificar);
-        if (!etapaOk.classList.contains('escondido')) return;
-        statusEl.textContent = 'Ainda nao identificamos o pagamento. Se ja pagou, aguarde alguns segundos e verifique de novo.';
+        if (!ok) {
+          statusEl.textContent = 'Seu acesso ainda não foi liberado. Se já pagou e enviou o comprovante, aguarde a confirmação do administrador.';
+        }
       });
 
       btnSimular.addEventListener('click', async function () {
         ocupado(btnSimular, 'Simulando...');
         const r = await api('/api/pagamento/simular', { body: {} });
         liberarBotao(btnSimular);
-        if (r.ok && r.dados.success) {
+        if (r.ok && r.dados && r.dados.success) {
           pararPolling();
           etapaPix.classList.add('escondido');
-          etapaGerar.classList.add('escondido');
           etapaOk.classList.remove('escondido');
         } else {
-          mostrarAviso(aviso, 'erro', r.dados.message || 'Falha na simulacao.');
+          mostrarAviso(aviso, 'erro', (r.dados && r.dados.message) || 'Falha na simulação.');
         }
       });
 
-      // Carregamento inicial
       (async function () {
         const u = await usuarioAtual();
         if (!u) {
@@ -222,17 +166,38 @@
           window.location.href = '/aulas';
           return;
         }
-        saudacao.textContent = 'Ola, ' + (u.nome || '').split(' ')[0] + '! Falta so o pagamento para liberar as aulas.';
-
-        try {
-          const cpfSalvo = localStorage.getItem('learis_cpf');
-          if (cpfSalvo) cpfInput.value = mascaraCpf(cpfSalvo);
-        } catch (e) {}
+        saudacao.textContent = 'Olá, ' + (u.nome || '').split(' ')[0] + '! Falta só o pagamento para liberar as aulas.';
 
         const cfg = await api('/api/config');
-        const valor = (cfg.ok && cfg.dados.valor) || (window.CONFIG_SITE && window.CONFIG_SITE.valorAcesso) || 16.9;
+        const valor = (cfg.ok && cfg.dados && cfg.dados.valor) || (window.CONFIG_SITE && window.CONFIG_SITE.valorAcesso) || 16.9;
         valorEl.textContent = formatarReal(valor);
-        if (cfg.ok && cfg.dados.devPayment) etapaDev.classList.remove('escondido');
+
+        const copia = cfg.ok && cfg.dados ? (cfg.dados.pixCopiaECola || '') : '';
+        const chave = cfg.ok && cfg.dados ? (cfg.dados.pixChave || '') : '';
+        const whats = cfg.ok && cfg.dados ? (cfg.dados.whatsappAdminUrl || '') : '';
+
+        if (copia) {
+          codigo.value = copia;
+          qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=' + encodeURIComponent(copia);
+          qr.classList.remove('escondido');
+        } else {
+          mostrarAviso(aviso, 'erro', 'Não foi possível carregar os dados do Pix. Tente recarregar a página.');
+          qr.classList.add('escondido');
+        }
+
+        if (chave) {
+          chaveInfo.textContent = 'Chave Pix: ' + chave;
+        }
+
+        if (whats) {
+          linkWhats.href = whats;
+          blocoWhats.classList.remove('escondido');
+        }
+
+        if (cfg.ok && cfg.dados && cfg.dados.devPayment) etapaDev.classList.remove('escondido');
+
+        // Mostra dados fixos imediatamente (já carregados da config)
+        iniciarPolling();
       })();
     })();
   </script>

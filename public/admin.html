@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>Admin - Curso de Eletricista</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+  <style>
+    .lista-usuarios { margin-top: 14px; display: grid; gap: 10px; }
+    .usuario-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; }
+    .usuario-topo { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .usuario-meta { color: #9fb0cc; font-size: 13px; margin-top: 4px; word-break: break-all; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .tag.ok { background: rgba(34,197,94,.18); color: #86efac; }
+    .tag.pendente { background: rgba(245,158,11,.18); color: #fcd34d; }
+    .acoes-inline { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .btn-peq { padding: 8px 12px; font-size: 13px; width: auto; }
+    .busca-row { display: flex; gap: 8px; }
+    .busca-row input { flex: 1; }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca"><span class="raio">⚡</span> Curso de Eletricista — Admin</div>
+  </header>
+
+  <main class="palco">
+    <section class="cartao" style="max-width: 860px;">
+      <h1>Área administrativa</h1>
+      <p class="apoio">Libere manualmente o acesso dos alunos após confirmar o pagamento.</p>
+
+      <div id="aviso" class="aviso"></div>
+
+      <div id="etapa-login">
+        <div class="campo">
+          <label for="senha">Senha do administrador</label>
+          <input id="senha" type="password" autocomplete="current-password" placeholder="Digite a senha">
+        </div>
+        <button class="btn" type="button" id="btn-entrar">Entrar</button>
+      </div>
+
+      <div id="etapa-painel" class="escondido">
+        <div class="campo">
+          <label for="busca">Buscar aluno (nome ou e-mail)</label>
+          <div class="busca-row">
+            <input id="busca" type="text" placeholder="Ex.: maria@email.com">
+            <button class="btn btn-peq" type="button" id="btn-buscar" style="width:auto;min-width:110px">Buscar</button>
+          </div>
+        </div>
+
+        <div id="lista" class="lista-usuarios"></div>
+
+        <div class="linha-links centro" style="margin-top:20px">
+          <a href="#" id="link-sair-admin">Sair do admin</a>
+        </div>
+      </div>
+    </section>
+
+    <p class="rodape">Curso de Eletricista • learis.com.br</p>
+  </main>
+
+  <script src="/auth.js"></script>
+  <script>
+    (function () {
+      const aviso = document.getElementById('aviso');
+      const etapaLogin = document.getElementById('etapa-login');
+      const etapaPainel = document.getElementById('etapa-painel');
+      const senhaInput = document.getElementById('senha');
+      const btnEntrar = document.getElementById('btn-entrar');
+      const buscaInput = document.getElementById('busca');
+      const btnBuscar = document.getElementById('btn-buscar');
+      const lista = document.getElementById('lista');
+      const linkSair = document.getElementById('link-sair-admin');
+
+      async function carregarUsuarios() {
+        const q = (buscaInput.value || '').trim();
+        const url = '/api/admin/usuarios' + (q ? ('?q=' + encodeURIComponent(q)) : '');
+        const r = await api(url);
+        if (!r.ok || !r.dados || !r.dados.success) {
+          if (r.status === 401) { mostrarLogin('Sessão expirada. Entre novamente.'); return; }
+          mostrarAviso(aviso, 'erro', (r.dados && r.dados.message) || 'Erro ao carregar usuários.');
+          return;
+        }
+        renderUsuarios(r.dados.usuarios || []);
+      }
+
+      function renderUsuarios(usuarios) {
+        if (!usuarios.length) {
+          lista.innerHTML = '<p style="color:#9fb0cc">Nenhum usuário encontrado.</p>';
+          return;
+        }
+        lista.innerHTML = usuarios.map(function (u) {
+          const nome = escaparHtml(u.nome || '');
+          const email = escaparHtml(u.email || '');
+          const liberado = !!u.liberado;
+          const confirmado = !!u.confirmado;
+          const tagAcesso = liberado ? '<span class="tag ok">Acesso liberado</span>' : '<span class="tag pendente">Pendente</span>';
+          const tagEmail = confirmado ? '<span class="tag ok">E-mail confirmado</span>' : '<span class="tag pendente">E-mail pendente</span>';
+          const btn = liberado
+            ? '<button class="btn contorno btn-peq" type="button" disabled>Já liberado</button>'
+            : '<button class="btn btn-peq" type="button" data-liberar="' + escaparHtml(u.id) + '">Liberar acesso</button>';
+          return '<div class="usuario-item">'
+            + '<div class="usuario-topo"><strong>' + nome + '</strong><div>' + tagAcesso + ' ' + tagEmail + '</div></div>'
+            + '<div class="usuario-meta">' + email + '</div>'
+            + '<div class="acoes-inline">' + btn + '</div>'
+            + '</div>';
+        }).join('');
+
+        lista.querySelectorAll('[data-liberar]').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            const userId = btn.getAttribute('data-liberar');
+            if (!userId) return;
+            if (!confirm('Confirmar liberação de acesso para este usuário?')) return;
+            ocupado(btn, 'Liberando...');
+            const r = await api('/api/admin/liberar', { body: { userId } });
+            liberarBotao(btn);
+            if (r.ok && r.dados && r.dados.success) {
+              mostrarAviso(aviso, 'ok', 'Acesso liberado com sucesso.');
+              carregarUsuarios();
+            } else {
+              mostrarAviso(aviso, 'erro', (r.dados && r.dados.message) || 'Não foi possível liberar o acesso.');
+            }
+          });
+        });
+      }
+
+      function mostrarPainel() {
+        etapaLogin.classList.add('escondido');
+        etapaPainel.classList.remove('escondido');
+        carregarUsuarios();
+      }
+
+      function mostrarLogin(msg) {
+        etapaPainel.classList.add('escondido');
+        etapaLogin.classList.remove('escondido');
+        if (msg) mostrarAviso(aviso, 'erro', msg);
+      }
+
+      btnEntrar.addEventListener('click', async function () {
+        esconderAviso(aviso);
+        const senha = senhaInput.value || '';
+        if (!senha) { mostrarAviso(aviso, 'erro', 'Informe a senha.'); return; }
+        ocupado(btnEntrar, 'Entrando...');
+        const r = await api('/api/admin/login', { body: { senha } });
+        liberarBotao(btnEntrar);
+        if (r.ok && r.dados && r.dados.success) {
+          senhaInput.value = '';
+          esconderAviso(aviso);
+          mostrarPainel();
+        } else {
+          mostrarAviso(aviso, 'erro', (r.dados && r.dados.message) || 'Senha incorreta.');
+        }
+      });
+
+      senhaInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') btnEntrar.click();
+      });
+
+      btnBuscar.addEventListener('click', function () { carregarUsuarios(); });
+      buscaInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') carregarUsuarios(); });
+
+      linkSair.addEventListener('click', async function (e) {
+        e.preventDefault();
+        await api('/api/admin/logout', { method: 'POST' });
+        mostrarLogin('');
+        esconderAviso(aviso);
+      });
+
+      (async function init() {
+        const r = await api('/api/admin/me');
+        if (r.ok && r.dados && r.dados.admin) {
+          mostrarPainel();
+        } else {
+          if (r.ok && r.dados && r.dados.configurado === false) {
+            mostrarAviso(aviso, 'erro', 'ADMIN_SENHA não configurada no servidor. Defina a variável de ambiente e reinicie.');
+          }
+          mostrarLogin('');
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
